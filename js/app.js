@@ -118,7 +118,7 @@ function renderContactInfo(company, personalContacts, scale = 1) {
                 // 第一行：显示标签和内容
                 itemHTML += `
                     <div style="display: flex; margin-bottom: 0px; line-height: 1.4;">
-                        <div style="width: ${labelWidth}px; text-align: left; padding-right: 20px; flex-shrink: 0;">
+                        <div style="width: ${labelWidth}px; text-align: left; padding-right: 25px; flex-shrink: 0;">
                             <strong>${label}:</strong>
                         </div>
                         <div style="flex: 1;">${line}</div>
@@ -128,7 +128,7 @@ function renderContactInfo(company, personalContacts, scale = 1) {
                 // 续行：只显示内容，与第一行内容对齐
                 itemHTML += `
                     <div style="display: flex; margin-bottom: 0px; line-height: 1.4;">
-                        <div style="width: ${labelWidth}px; padding-right: 20px; flex-shrink: 0;"></div>
+                        <div style="width: ${labelWidth}px; padding-right: 25px; flex-shrink: 0;"></div>
                         <div style="flex: 1;">${line}</div>
                     </div>
                 `;
