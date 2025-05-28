@@ -106,8 +106,17 @@ function renderContactInfo(company, personalContacts, scale = 1) {
     // 构建联系信息数组，只包含有值的项目
     const contactItems = [];
 
-    // 添加公司地址（必显示）
-    contactItems.push(`<div style="margin-bottom: 0px;"><strong>Add:</strong> ${company.address}</div>`);
+    // 添加公司地址（必显示）- 支持自动换行
+    const maxCharsPerLine = Math.floor(50 / scale); // 根据缩放调整每行字符数
+    const addressLines = wrapTextForHTML(company.address, maxCharsPerLine);
+    const addressHTML = addressLines.map((line, index) => {
+        if (index === 0) {
+            return `<div style="margin-bottom: 0px;"><strong>Add:</strong> ${line}</div>`;
+        } else {
+            return `<div style="margin-bottom: 0px; margin-left: 40px;">${line}</div>`;
+        }
+    }).join('');
+    contactItems.push(addressHTML);
 
     // 添加个人联系方式（只显示有值的）
     const telValue = personalContacts.find(c => c.label === 'Tel')?.value;
@@ -148,6 +157,27 @@ function renderContactInfo(company, personalContacts, scale = 1) {
             ${contactItems.join('')}
         </div>
     `;
+}
+
+// HTML文本换行函数
+function wrapTextForHTML(text, maxCharsPerLine) {
+    const words = text.split(' ');
+    const lines = [];
+    let currentLine = words[0] || '';
+
+    for (let i = 1; i < words.length; i++) {
+        const word = words[i];
+        if ((currentLine + ' ' + word).length <= maxCharsPerLine) {
+            currentLine += ' ' + word;
+        } else {
+            lines.push(currentLine);
+            currentLine = word;
+        }
+    }
+    if (currentLine) {
+        lines.push(currentLine);
+    }
+    return lines;
 }
 
 // 办公地点信息区域渲染函数 - 使用精确像素定位
@@ -250,6 +280,39 @@ function enableButtons() {
     saveTemplate.disabled = !isValid;
 }
 
+// 文本换行函数 - 处理Canvas中的长文本
+function wrapText(ctx, text, maxWidth) {
+    const words = text.split(' ');
+    const lines = [];
+    let currentLine = words[0];
+
+    for (let i = 1; i < words.length; i++) {
+        const word = words[i];
+        const width = ctx.measureText(currentLine + ' ' + word).width;
+        if (width < maxWidth) {
+            currentLine += ' ' + word;
+        } else {
+            lines.push(currentLine);
+            currentLine = word;
+        }
+    }
+    lines.push(currentLine);
+    return lines;
+}
+
+// 绘制多行文本
+function drawMultilineText(ctx, text, x, y, maxWidth, lineHeight) {
+    const lines = wrapText(ctx, text, maxWidth);
+    let currentY = y;
+
+    lines.forEach((line, index) => {
+        ctx.fillText(line, x, currentY);
+        currentY += lineHeight;
+    });
+
+    return currentY; // 返回下一行的Y位置
+}
+
 // 将签名转换为Canvas图片 - 使用原图尺寸确保精确定位
 async function convertToImage() {
     const signatureElement = previewArea.querySelector('div[style*="background-image"]');
@@ -305,42 +368,43 @@ async function convertToImage() {
                 ctx.fillStyle = '#144E8C';
                 ctx.font = '28px Arial';
                 let yPos = 200;
+                const maxWidth = 1050; // 最大宽度，留出右边距
+                const lineHeight = 40; // 行高
 
-                // 添加地址
-                ctx.fillText(`Add: ${company.address}`, 500, yPos);
-                yPos += 40;
+                // 添加地址（支持自动换行）
+                yPos = drawMultilineText(ctx, `Add: ${company.address}`, 500, yPos, maxWidth, lineHeight);
 
                 // 添加联系方式
                 if (tel.value.trim()) {
                     ctx.fillText(`Tel: ${tel.value.trim()}`, 500, yPos);
-                    yPos += 40;
+                    yPos += lineHeight;
                 }
                 if (fax.value.trim()) {
                     ctx.fillText(`Fax: ${fax.value.trim()}`, 500, yPos);
-                    yPos += 40;
+                    yPos += lineHeight;
                 }
                 if (mobile.value.trim()) {
                     ctx.fillText(`Mobile: ${mobile.value.trim()}`, 500, yPos);
-                    yPos += 40;
+                    yPos += lineHeight;
                 }
                 if (email.value.trim()) {
                     ctx.fillText(`E-mail: ${email.value.trim()}`, 500, yPos);
-                    yPos += 40;
+                    yPos += lineHeight;
                 }
 
                 // 添加IM信息
                 if (imType1.value && imValue1.value.trim()) {
                     ctx.fillText(`${imType1.value}: ${imValue1.value.trim()}`, 500, yPos);
-                    yPos += 40;
+                    yPos += lineHeight;
                 }
                 if (imType2.value && imValue2.value.trim()) {
                     ctx.fillText(`${imType2.value}: ${imValue2.value.trim()}`, 500, yPos);
-                    yPos += 40;
+                    yPos += lineHeight;
                 }
 
                 // 添加网站信息
                 ctx.fillText('Website: www.pgs-log.com', 500, yPos);
-                yPos += 40;
+                yPos += lineHeight;
                 ctx.fillText('Group: www.francescoparisi.com', 500, yPos);
 
                 // 添加底部办公地点信息（白色文字）
