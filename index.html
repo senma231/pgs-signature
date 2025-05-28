@@ -60,13 +60,14 @@
 
         <!-- 主要内容 -->
         <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                <!-- 左侧：表单 -->
-                <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-                    <h2 class="text-xl font-semibold text-gray-900 mb-6">
-                        电子签名信息
-                    </h2>
+            <!-- 上部：表单信息 -->
+            <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-8">
+                <h2 class="text-xl font-semibold text-gray-900 mb-6">
+                    电子签名信息
+                </h2>
 
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    <!-- 左侧：基本信息 -->
                     <div class="space-y-6">
                         <!-- 公司选择 -->
                         <div>
@@ -138,10 +139,12 @@
                             />
                             <div id="department-error" class="form-error hidden">请输入部门</div>
                         </div>
+                    </div>
 
-                        <!-- 联系方式 -->
-                        <div>
-                            <h3 class="text-md font-medium text-gray-900 mb-4">联系方式（可选）/ Contact Information (Optional)</h3>
+                    <!-- 右侧：联系方式 -->
+                    <div>
+                        <h3 class="text-md font-medium text-gray-900 mb-4">联系方式（可选）/ Contact Information (Optional)</h3>
+                        <div class="space-y-4">
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700 mb-2">Tel（电话）</label>
@@ -179,108 +182,81 @@
                                         placeholder="请输入邮箱地址"
                                     />
                                 </div>
-                                <div class="md:col-span-2">
-                                    <label class="block text-sm font-medium text-gray-700 mb-2">IM（即时通讯）</label>
-                                    <div class="space-y-3">
-                                        <!-- 第一个IM -->
-                                        <div class="flex gap-2">
-                                            <select id="imType1" class="w-32 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                                                <option value="">选择类型</option>
-                                                <option value="QQ">QQ</option>
-                                                <option value="微信">微信</option>
-                                                <option value="WhatsApp">WhatsApp</option>
-                                                <option value="Line">Line</option>
-                                                <option value="LinkedIn">LinkedIn</option>
-                                                <option value="Skype">Skype</option>
-                                            </select>
-                                            <input
-                                                type="text"
-                                                id="imValue1"
-                                                class="flex-1 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                                placeholder="请输入对应的账号或ID"
-                                            />
-                                        </div>
-                                        <!-- 第二个IM -->
-                                        <div class="flex gap-2">
-                                            <select id="imType2" class="w-32 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                                                <option value="">选择类型</option>
-                                                <option value="QQ">QQ</option>
-                                                <option value="微信">微信</option>
-                                                <option value="WhatsApp">WhatsApp</option>
-                                                <option value="Line">Line</option>
-                                                <option value="LinkedIn">LinkedIn</option>
-                                                <option value="Skype">Skype</option>
-                                            </select>
-                                            <input
-                                                type="text"
-                                                id="imValue2"
-                                                class="flex-1 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                                placeholder="请输入对应的账号或ID"
-                                            />
-                                        </div>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">IM（即时通讯）</label>
+                                <div class="space-y-3">
+                                    <!-- 第一个IM -->
+                                    <div class="flex gap-2">
+                                        <select id="imType1" class="w-32 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                                            <option value="">选择类型</option>
+                                            <option value="QQ">QQ</option>
+                                            <option value="微信">微信</option>
+                                            <option value="WhatsApp">WhatsApp</option>
+                                            <option value="Line">Line</option>
+                                            <option value="LinkedIn">LinkedIn</option>
+                                            <option value="Skype">Skype</option>
+                                        </select>
+                                        <input
+                                            type="text"
+                                            id="imValue1"
+                                            class="flex-1 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                            placeholder="请输入对应的账号或ID"
+                                        />
+                                    </div>
+                                    <!-- 第二个IM -->
+                                    <div class="flex gap-2">
+                                        <select id="imType2" class="w-32 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                                            <option value="">选择类型</option>
+                                            <option value="QQ">QQ</option>
+                                            <option value="微信">微信</option>
+                                            <option value="WhatsApp">WhatsApp</option>
+                                            <option value="Line">Line</option>
+                                            <option value="LinkedIn">LinkedIn</option>
+                                            <option value="Skype">Skype</option>
+                                        </select>
+                                        <input
+                                            type="text"
+                                            id="imValue2"
+                                            class="flex-1 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                            placeholder="请输入对应的账号或ID"
+                                        />
                                     </div>
                                 </div>
                             </div>
                         </div>
-
-
                     </div>
                 </div>
+            </div>
 
-                <!-- 右侧：预览 -->
-                <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-                    <h2 class="text-xl font-semibold text-gray-900 mb-6">签名预览 / Signature Preview</h2>
+            <!-- 下部：签名预览 -->
+            <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                <h2 class="text-xl font-semibold text-gray-900 mb-6">签名预览 / Signature Preview</h2>
 
-                    <!-- 预览模式切换 -->
-                    <div class="mb-4 flex gap-4">
-                        <label class="flex items-center cursor-pointer">
-                            <input type="radio" name="previewMode" value="scaled" checked class="mr-2">
-                            <span class="text-sm font-medium">缩放预览 (50%)</span>
-                        </label>
-                        <label class="flex items-center cursor-pointer">
-                            <input type="radio" name="previewMode" value="actual" class="mr-2">
-                            <span class="text-sm font-medium">实际尺寸 (1600×580)</span>
-                        </label>
+                <!-- 预览区域 -->
+                <div class="mb-6">
+                    <div class="mb-2 text-sm text-gray-600 bg-yellow-50 border border-yellow-200 rounded p-2">
+                        <span class="font-medium">📏 实际输出尺寸：</span>1600×580像素
+                        <span class="ml-4 text-orange-600">⚠️ 可能需要滚动查看完整内容</span>
                     </div>
-
-                    <!-- 缩放预览区域 -->
-                    <div id="scaledPreviewContainer" class="preview-container">
-                        <div id="previewArea" class="signature-preview flex items-center justify-center min-h-64 text-gray-500 bg-gray-50 border-2 border-dashed border-gray-300 rounded-lg">
+                    <div class="border-2 border-gray-300 rounded-lg overflow-auto" style="max-height: 600px; max-width: 100%;">
+                        <div id="previewArea" class="signature-preview flex items-center justify-center text-gray-500 bg-gray-50" style="width: 1600px; height: 580px;">
                             <div class="text-center">
                                 <p class="text-lg mb-2">请完善表单信息</p>
                                 <p class="text-sm">选择公司并填写姓名、部门后即可预览签名</p>
                             </div>
                         </div>
                     </div>
+                </div>
 
-                    <!-- 实际尺寸预览区域 -->
-                    <div id="actualPreviewContainer" class="preview-container hidden">
-                        <div class="mb-2 text-sm text-gray-600 bg-yellow-50 border border-yellow-200 rounded p-2">
-                            <span class="font-medium">📏 实际输出尺寸：</span>1600×580像素
-                            <span class="ml-4 text-orange-600">⚠️ 可能需要滚动查看完整内容</span>
-                        </div>
-                        <div class="border-2 border-gray-300 rounded-lg overflow-auto" style="max-height: 400px; max-width: 100%;">
-                            <div id="actualPreviewArea" class="signature-preview-actual flex items-center justify-center text-gray-500 bg-gray-50" style="width: 1600px; height: 580px;">
-                                <div class="text-center">
-                                    <p class="text-lg mb-2">请完善表单信息</p>
-                                    <p class="text-sm">选择公司并填写姓名、部门后即可预览签名</p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- 操作按钮 -->
-                    <div class="mt-6 flex justify-center space-x-4">
-                        <button id="exportImage" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
-                            Export Image
-                        </button>
-                        <button id="copyImage" class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
-                            Copy Image
-                        </button>
-                        <button id="saveTemplate" class="px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
-                            Save Template
-                        </button>
-                    </div>
+                <!-- 操作按钮 -->
+                <div class="flex justify-center space-x-4">
+                    <button id="exportImage" class="px-6 py-3 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-lg font-medium">
+                        Export Image
+                    </button>
+                    <button id="copyImage" class="px-6 py-3 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-lg font-medium">
+                        Copy Image
+                    </button>
                 </div>
             </div>
         </main>
@@ -350,10 +326,10 @@
     </div>
 
     <script>
-        // 配置预览和生成使用不同的背景图片
+        // 配置预览和生成都使用相同的背景图片
         window.BACKGROUND_CONFIG = {
-            preview: 'public/preview.png',  // 缩放预览(50%)使用
-            export: 'public/back.png'       // 实际尺寸预览和导出使用
+            preview: 'public/back.png',  // 预览使用back.png
+            export: 'public/back.png'    // 导出使用back.png
         };
     </script>
     <script src="./js/cloudflare-api.js"></script>

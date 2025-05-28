@@ -17,14 +17,10 @@ const imValue1 = document.getElementById('imValue1');
 const imType2 = document.getElementById('imType2');
 const imValue2 = document.getElementById('imValue2');
 const previewArea = document.getElementById('previewArea');
-const actualPreviewArea = document.getElementById('actualPreviewArea');
-const scaledPreviewContainer = document.getElementById('scaledPreviewContainer');
-const actualPreviewContainer = document.getElementById('actualPreviewContainer');
 
 // 按钮元素
 const exportImage = document.getElementById('exportImage');
 const copyImage = document.getElementById('copyImage');
-const saveTemplate = document.getElementById('saveTemplate');
 
 // 更新状态显示
 function updateStatus() {
@@ -107,9 +103,9 @@ function renderPersonalInfo(name, dept, company, scale = 1) {
 // 联系信息区域渲染函数 - 使用两列对齐布局
 function renderContactInfo(company, personalContacts, scale = 1) {
     const contactItems = [];
-    const labelWidth = 100 * scale; // 标签列宽度（从80增加到100）
-    const contentStartX = 120 * scale; // 内容列起始位置
-    const maxContentWidth = Math.floor(40 / scale); // 内容列最大字符数（适当减少以适应新布局）
+    const labelWidth = 140 * scale; // 标签列宽度（增加到140以容纳E-mail等较长标签）
+    const contentStartX = 160 * scale; // 内容列起始位置
+    const maxContentWidth = Math.floor(90 / scale); // 内容列最大字符数（增加以匹配Canvas效果）
 
     // 创建两列对齐的项目函数
     function createAlignedItem(label, content) {
@@ -118,21 +114,21 @@ function renderContactInfo(company, personalContacts, scale = 1) {
 
         contentLines.forEach((line, index) => {
             if (index === 0) {
-                // 第一行：显示标签和内容
+                // 第一行：显示标签和内容，都靠左对齐
                 itemHTML += `
                     <div style="display: flex; margin-bottom: 0px; line-height: 1.4;">
                         <div style="width: ${labelWidth}px; text-align: left; padding-right: 25px; flex-shrink: 0;">
                             <strong>${label}:</strong>
                         </div>
-                        <div style="flex: 1;">${line}</div>
+                        <div style="flex: 1; text-align: left;">${line}</div>
                     </div>
                 `;
             } else {
-                // 续行：只显示内容，与第一行内容对齐
+                // 续行：只显示内容，与第一行内容对齐，内容靠左对齐
                 itemHTML += `
                     <div style="display: flex; margin-bottom: 0px; line-height: 1.4;">
                         <div style="width: ${labelWidth}px; padding-right: 25px; flex-shrink: 0;"></div>
-                        <div style="flex: 1;">${line}</div>
+                        <div style="flex: 1; text-align: left;">${line}</div>
                     </div>
                 `;
             }
@@ -244,29 +240,19 @@ function updatePreview() {
     }
 
     if (!company || !name || !dept || (company.isDefault && (!company.name || !company.address))) {
-        // 更新缩放预览
+        // 显示提示信息
         previewArea.innerHTML = `
             <div class="text-center">
                 <p class="text-lg mb-2">请完善表单信息</p>
                 <p class="text-sm">选择公司并填写姓名、部门后即可预览签名</p>
             </div>
         `;
-        previewArea.className = "signature-preview flex items-center justify-center min-h-64 text-gray-500 bg-gray-50 border-2 border-dashed border-gray-300 rounded-lg";
-
-        // 更新实际尺寸预览
-        actualPreviewArea.innerHTML = `
-            <div class="text-center">
-                <p class="text-lg mb-2">请完善表单信息</p>
-                <p class="text-sm">选择公司并填写姓名、部门后即可预览签名</p>
-            </div>
-        `;
-        actualPreviewArea.className = "signature-preview-actual flex items-center justify-center text-gray-500 bg-gray-50";
+        previewArea.className = "signature-preview flex items-center justify-center text-gray-500 bg-gray-50";
         return;
     }
 
     // 移除默认样式，准备显示签名
     previewArea.className = "signature-preview";
-    actualPreviewArea.className = "signature-preview-actual";
 
     // 获取个人联系方式（只显示用户填写的）
     const personalContacts = [];
@@ -293,34 +279,16 @@ function updatePreview() {
         });
     }
 
-    // 获取不同的背景图片
-    const scaledPreviewBgImage = getBackgroundImage(true);   // 缩放预览使用preview.png
-    const actualPreviewBgImage = getBackgroundImage(false);  // 实际尺寸使用back.png
-
-    // 缩放预览 (50%) - 使用preview.png
-    const originalWidth = 1600;
-    const originalHeight = 580;
-    const scale = 0.5;
-    const containerWidth = originalWidth * scale; // 800px
-    const containerHeight = originalHeight * scale; // 290px
-
-    previewArea.innerHTML = `
-        <div style="width: ${containerWidth}px; height: ${containerHeight}px; font-family: Arial, sans-serif; background-image: url('${scaledPreviewBgImage}'); background-size: ${containerWidth}px ${containerHeight}px; background-position: 0 0; background-repeat: no-repeat; position: relative; overflow: hidden; border: 1px solid #ddd;">
-            ${renderPersonalInfo(name, dept, company, scale)}
-            ${renderContactInfo(company, personalContacts, scale)}
-            ${renderOfficeInfo(scale)}
-            <!-- 预览提示文字 -->
-            <div style="position: absolute; bottom: 5px; left: 5px; background: rgba(0,0,0,0.7); color: white; padding: 4px 8px; border-radius: 4px; font-size: 10px; line-height: 1.2; z-index: 10;">
-                <div style="margin-bottom: 2px;">缩放预览 (50%)</div>
-                <div>Scaled Preview (50%)</div>
-            </div>
-        </div>
-    `;
+    // 使用back.png作为背景图片
+    const backgroundImage = getBackgroundImage(false);
 
     // 实际尺寸预览 (100%) - 使用back.png
+    const originalWidth = 1600;
+    const originalHeight = 580;
     const actualScale = 1.0;
-    actualPreviewArea.innerHTML = `
-        <div style="width: ${originalWidth}px; height: ${originalHeight}px; font-family: Arial, sans-serif; background-image: url('${actualPreviewBgImage}'); background-size: ${originalWidth}px ${originalHeight}px; background-position: 0 0; background-repeat: no-repeat; position: relative; overflow: hidden; border: 1px solid #ddd;">
+
+    previewArea.innerHTML = `
+        <div style="width: ${originalWidth}px; height: ${originalHeight}px; font-family: Arial, sans-serif; background-image: url('${backgroundImage}'); background-size: ${originalWidth}px ${originalHeight}px; background-position: 0 0; background-repeat: no-repeat; position: relative; overflow: hidden; border: 1px solid #ddd;">
             ${renderPersonalInfo(name, dept, company, actualScale)}
             ${renderContactInfo(company, personalContacts, actualScale)}
             ${renderOfficeInfo(actualScale)}
@@ -338,20 +306,26 @@ function enableButtons() {
     const isValid = validateForm();
     exportImage.disabled = !isValid;
     copyImage.disabled = !isValid;
-    saveTemplate.disabled = !isValid;
 }
 
-// 文本换行函数 - 处理Canvas中的长文本
+// 文本换行函数 - 处理Canvas中的长文本，优化换行逻辑
 function wrapText(ctx, text, maxWidth) {
+    // 如果文本很短，直接返回
+    if (ctx.measureText(text).width <= maxWidth) {
+        return [text];
+    }
+
     const words = text.split(' ');
     const lines = [];
-    let currentLine = words[0];
+    let currentLine = words[0] || '';
 
     for (let i = 1; i < words.length; i++) {
         const word = words[i];
-        const width = ctx.measureText(currentLine + ' ' + word).width;
-        if (width < maxWidth) {
-            currentLine += ' ' + word;
+        const testLine = currentLine + ' ' + word;
+        const testWidth = ctx.measureText(testLine).width;
+
+        if (testWidth <= maxWidth) {
+            currentLine = testLine;
         } else {
             lines.push(currentLine);
             currentLine = word;
@@ -453,8 +427,8 @@ async function convertToImage() {
                 ctx.font = '28px Arial';
                 let yPos = 200;
                 const lineHeight = 40; // 行高
-                const labelWidth = 100; // 标签列宽度（从80增加到100）
-                const maxContentWidth = 900; // 内容列最大宽度（适当减少以适应新布局）
+                const labelWidth = 140; // 标签列宽度（与HTML预览保持一致）
+                const maxContentWidth = 950; // 内容列最大宽度（大幅增加以匹配HTML预览的饱满效果）
                 const startX = 500; // 起始X位置
 
                 // 添加地址（支持自动换行）
@@ -580,63 +554,7 @@ async function copyImageHandler() {
     }
 }
 
-// 保存模板
-function saveTemplateHandler() {
-    if (!validateForm()) {
-        alert('请完善表单信息');
-        return;
-    }
 
-    // 获取当前表单数据
-    const templateData = {
-        company: companySelect.value,
-        customCompanyName: customCompanyName.value.trim(),
-        customCompanyAddress: customCompanyAddress.value.trim(),
-        contactName: contactName.value.trim(),
-        department: department.value.trim(),
-        tel: tel.value.trim(),
-        fax: fax.value.trim(),
-        mobile: mobile.value.trim(),
-        email: email.value.trim(),
-        imType1: imType1.value,
-        imValue1: imValue1.value.trim(),
-        imType2: imType2.value,
-        imValue2: imValue2.value.trim()
-    };
-
-    // 保存到localStorage
-    localStorage.setItem('signatureTemplate', JSON.stringify(templateData));
-    alert('模板已保存！');
-}
-
-// 加载保存的模板
-function loadSavedTemplate() {
-    try {
-        const savedTemplate = localStorage.getItem('signatureTemplate');
-        if (savedTemplate) {
-            const templateData = JSON.parse(savedTemplate);
-
-            // 填充表单
-            companySelect.value = templateData.company || '';
-            customCompanyName.value = templateData.customCompanyName || '';
-            customCompanyAddress.value = templateData.customCompanyAddress || '';
-            contactName.value = templateData.contactName || '';
-            department.value = templateData.department || '';
-            tel.value = templateData.tel || '';
-            fax.value = templateData.fax || '';
-            mobile.value = templateData.mobile || '';
-            email.value = templateData.email || '';
-            imType1.value = templateData.imType1 || '';
-            imValue1.value = templateData.imValue1 || '';
-            imType2.value = templateData.imType2 || '';
-            imValue2.value = templateData.imValue2 || '';
-
-            updateStatus();
-        }
-    } catch (error) {
-        console.error('Load template error:', error);
-    }
-}
 
 // 公司管理相关函数
 const companyModal = document.getElementById('companyModal');
@@ -759,9 +677,6 @@ async function initializeApp() {
         // 加载公司数据
         await initializeCompanySelect();
 
-        // 加载保存的模板
-        loadSavedTemplate();
-
         // 初始状态更新
         updateStatus();
         enableButtons();
@@ -773,18 +688,7 @@ async function initializeApp() {
     }
 }
 
-// 预览模式切换功能
-function switchPreviewMode() {
-    const selectedMode = document.querySelector('input[name="previewMode"]:checked').value;
 
-    if (selectedMode === 'scaled') {
-        scaledPreviewContainer.classList.remove('hidden');
-        actualPreviewContainer.classList.add('hidden');
-    } else {
-        scaledPreviewContainer.classList.add('hidden');
-        actualPreviewContainer.classList.remove('hidden');
-    }
-}
 
 // 事件监听器
 document.addEventListener('DOMContentLoaded', function() {
@@ -800,16 +704,9 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
-    // 预览模式切换监听
-    const previewModeRadios = document.querySelectorAll('input[name="previewMode"]');
-    previewModeRadios.forEach(radio => {
-        radio.addEventListener('change', switchPreviewMode);
-    });
-
     // 按钮事件
     exportImage.addEventListener('click', exportImageHandler);
     copyImage.addEventListener('click', copyImageHandler);
-    saveTemplate.addEventListener('click', saveTemplateHandler);
 
     // 公司管理事件
     manageCompanies.addEventListener('click', openCompanyManagement);
