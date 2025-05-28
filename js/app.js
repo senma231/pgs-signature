@@ -293,10 +293,11 @@ function updatePreview() {
         });
     }
 
-    // 获取预览背景图片
-    const previewBgImage = getBackgroundImage(true);
+    // 获取不同的背景图片
+    const scaledPreviewBgImage = getBackgroundImage(true);   // 缩放预览使用preview.png
+    const actualPreviewBgImage = getBackgroundImage(false);  // 实际尺寸使用back.png
 
-    // 缩放预览 (50%)
+    // 缩放预览 (50%) - 使用preview.png
     const originalWidth = 1600;
     const originalHeight = 580;
     const scale = 0.5;
@@ -304,7 +305,7 @@ function updatePreview() {
     const containerHeight = originalHeight * scale; // 290px
 
     previewArea.innerHTML = `
-        <div style="width: ${containerWidth}px; height: ${containerHeight}px; font-family: Arial, sans-serif; background-image: url('${previewBgImage}'); background-size: ${containerWidth}px ${containerHeight}px; background-position: 0 0; background-repeat: no-repeat; position: relative; overflow: hidden; border: 1px solid #ddd;">
+        <div style="width: ${containerWidth}px; height: ${containerHeight}px; font-family: Arial, sans-serif; background-image: url('${scaledPreviewBgImage}'); background-size: ${containerWidth}px ${containerHeight}px; background-position: 0 0; background-repeat: no-repeat; position: relative; overflow: hidden; border: 1px solid #ddd;">
             ${renderPersonalInfo(name, dept, company, scale)}
             ${renderContactInfo(company, personalContacts, scale)}
             ${renderOfficeInfo(scale)}
@@ -316,10 +317,10 @@ function updatePreview() {
         </div>
     `;
 
-    // 实际尺寸预览 (100%)
+    // 实际尺寸预览 (100%) - 使用back.png
     const actualScale = 1.0;
     actualPreviewArea.innerHTML = `
-        <div style="width: ${originalWidth}px; height: ${originalHeight}px; font-family: Arial, sans-serif; background-image: url('${previewBgImage}'); background-size: ${originalWidth}px ${originalHeight}px; background-position: 0 0; background-repeat: no-repeat; position: relative; overflow: hidden; border: 1px solid #ddd;">
+        <div style="width: ${originalWidth}px; height: ${originalHeight}px; font-family: Arial, sans-serif; background-image: url('${actualPreviewBgImage}'); background-size: ${originalWidth}px ${originalHeight}px; background-position: 0 0; background-repeat: no-repeat; position: relative; overflow: hidden; border: 1px solid #ddd;">
             ${renderPersonalInfo(name, dept, company, actualScale)}
             ${renderContactInfo(company, personalContacts, actualScale)}
             ${renderOfficeInfo(actualScale)}
