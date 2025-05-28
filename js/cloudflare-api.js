@@ -21,7 +21,7 @@ const API_CONFIG = {
 
         // Cloudflare Pages环境
         if (hostname.includes('pages.dev')) {
-            return 'https://your-worker-name.your-subdomain.workers.dev/api';
+            return 'https://signature-api.gp96123.workers.dev/api';
         }
 
         // 自定义域名环境
