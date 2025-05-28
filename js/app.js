@@ -218,6 +218,15 @@ function renderOfficeInfo(scale = 1) {
     `;
 }
 
+// 获取背景图片路径
+function getBackgroundImage(isPreview = true) {
+    if (window.BACKGROUND_CONFIG) {
+        return isPreview ? window.BACKGROUND_CONFIG.preview : window.BACKGROUND_CONFIG.export;
+    }
+    // 默认使用back.png
+    return './public/back.png';
+}
+
 // 更新预览
 function updatePreview() {
     const companies = cloudflareCompanyManager.getCompanies();
@@ -284,6 +293,9 @@ function updatePreview() {
         });
     }
 
+    // 获取预览背景图片
+    const previewBgImage = getBackgroundImage(true);
+
     // 缩放预览 (50%)
     const originalWidth = 1600;
     const originalHeight = 580;
@@ -292,7 +304,7 @@ function updatePreview() {
     const containerHeight = originalHeight * scale; // 290px
 
     previewArea.innerHTML = `
-        <div style="width: ${containerWidth}px; height: ${containerHeight}px; font-family: Arial, sans-serif; background-image: url('./images/back.png'); background-size: ${containerWidth}px ${containerHeight}px; background-position: 0 0; background-repeat: no-repeat; position: relative; overflow: hidden; border: 1px solid #ddd;">
+        <div style="width: ${containerWidth}px; height: ${containerHeight}px; font-family: Arial, sans-serif; background-image: url('${previewBgImage}'); background-size: ${containerWidth}px ${containerHeight}px; background-position: 0 0; background-repeat: no-repeat; position: relative; overflow: hidden; border: 1px solid #ddd;">
             ${renderPersonalInfo(name, dept, company, scale)}
             ${renderContactInfo(company, personalContacts, scale)}
             ${renderOfficeInfo(scale)}
@@ -307,7 +319,7 @@ function updatePreview() {
     // 实际尺寸预览 (100%)
     const actualScale = 1.0;
     actualPreviewArea.innerHTML = `
-        <div style="width: ${originalWidth}px; height: ${originalHeight}px; font-family: Arial, sans-serif; background-image: url('./images/back.png'); background-size: ${originalWidth}px ${originalHeight}px; background-position: 0 0; background-repeat: no-repeat; position: relative; overflow: hidden; border: 1px solid #ddd;">
+        <div style="width: ${originalWidth}px; height: ${originalHeight}px; font-family: Arial, sans-serif; background-image: url('${previewBgImage}'); background-size: ${originalWidth}px ${originalHeight}px; background-position: 0 0; background-repeat: no-repeat; position: relative; overflow: hidden; border: 1px solid #ddd;">
             ${renderPersonalInfo(name, dept, company, actualScale)}
             ${renderContactInfo(company, personalContacts, actualScale)}
             ${renderOfficeInfo(actualScale)}
@@ -486,9 +498,9 @@ async function convertToImage() {
                 reject(new Error('Failed to load background image'));
             };
 
-            // 使用相对路径
+            // 使用导出背景图片
             bgImg.crossOrigin = 'anonymous';
-            bgImg.src = './images/back.png';
+            bgImg.src = getBackgroundImage(false); // false表示导出模式
         });
     } catch (error) {
         console.error('Error converting to image:', error);
