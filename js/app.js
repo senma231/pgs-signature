@@ -118,7 +118,7 @@ function renderContactInfo(company, personalContacts, scale = 1) {
                 // 第一行：显示标签和内容
                 itemHTML += `
                     <div style="display: flex; margin-bottom: 0px; line-height: 1.4;">
-                        <div style="width: ${labelWidth}px; text-align: right; padding-right: 10px; flex-shrink: 0;">
+                        <div style="width: ${labelWidth}px; text-align: left; padding-right: 10px; flex-shrink: 0;">
                             <strong>${label}:</strong>
                         </div>
                         <div style="flex: 1;">${line}</div>
@@ -344,8 +344,8 @@ function drawAlignedContactItem(ctx, label, content, x, y, labelWidth, maxConten
     lines.forEach((line, index) => {
         if (index === 0) {
             // 第一行：绘制标签和内容
-            ctx.textAlign = 'right';
-            ctx.fillText(label + ':', x + labelWidth, currentY);
+            ctx.textAlign = 'left';
+            ctx.fillText(label + ':', x, currentY);
             ctx.textAlign = 'left';
             ctx.fillText(line, x + labelWidth + 15, currentY);
         } else {
