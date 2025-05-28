@@ -4,6 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Email Signature Generator - Parisi Grand Smooth Logistics</title>
+
+    <!-- API配置 - 请将下面的URL替换为您实际的Cloudflare Workers API地址 -->
+    <meta name="api-url" content="https://signature-api.gp96123.workers.dev/api">
+
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         .signature-preview {
@@ -227,11 +231,40 @@
                 <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
                     <h2 class="text-xl font-semibold text-gray-900 mb-6">签名预览 / Signature Preview</h2>
 
-                    <div class="preview-container">
+                    <!-- 预览模式切换 -->
+                    <div class="mb-4 flex gap-4">
+                        <label class="flex items-center cursor-pointer">
+                            <input type="radio" name="previewMode" value="scaled" checked class="mr-2">
+                            <span class="text-sm font-medium">缩放预览 (50%)</span>
+                        </label>
+                        <label class="flex items-center cursor-pointer">
+                            <input type="radio" name="previewMode" value="actual" class="mr-2">
+                            <span class="text-sm font-medium">实际尺寸 (1600×580)</span>
+                        </label>
+                    </div>
+
+                    <!-- 缩放预览区域 -->
+                    <div id="scaledPreviewContainer" class="preview-container">
                         <div id="previewArea" class="signature-preview flex items-center justify-center min-h-64 text-gray-500 bg-gray-50 border-2 border-dashed border-gray-300 rounded-lg">
                             <div class="text-center">
                                 <p class="text-lg mb-2">请完善表单信息</p>
                                 <p class="text-sm">选择公司并填写姓名、部门后即可预览签名</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 实际尺寸预览区域 -->
+                    <div id="actualPreviewContainer" class="preview-container hidden">
+                        <div class="mb-2 text-sm text-gray-600 bg-yellow-50 border border-yellow-200 rounded p-2">
+                            <span class="font-medium">📏 实际输出尺寸：</span>1600×580像素
+                            <span class="ml-4 text-orange-600">⚠️ 可能需要滚动查看完整内容</span>
+                        </div>
+                        <div class="border-2 border-gray-300 rounded-lg overflow-auto" style="max-height: 400px; max-width: 100%;">
+                            <div id="actualPreviewArea" class="signature-preview-actual flex items-center justify-center text-gray-500 bg-gray-50" style="width: 1600px; height: 580px;">
+                                <div class="text-center">
+                                    <p class="text-lg mb-2">请完善表单信息</p>
+                                    <p class="text-sm">选择公司并填写姓名、部门后即可预览签名</p>
+                                </div>
                             </div>
                         </div>
                     </div>

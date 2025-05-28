@@ -9,6 +9,15 @@ const API_CONFIG = {
     baseURL: (() => {
         const hostname = window.location.hostname;
 
+        // 检查是否有环境变量配置（通过meta标签或全局变量）
+        const envApiUrl = document.querySelector('meta[name="api-url"]')?.content ||
+                         window.CLOUDFLARE_API_URL;
+
+        if (envApiUrl) {
+            console.log('使用配置的API地址:', envApiUrl);
+            return envApiUrl;
+        }
+
         // 本地开发环境
         if (hostname === 'localhost' || hostname === '127.0.0.1') {
             return 'http://localhost:8787/api'; // Wrangler dev server
@@ -21,10 +30,11 @@ const API_CONFIG = {
 
         // Cloudflare Pages环境
         if (hostname.includes('pages.dev')) {
-            return 'https://signature-api.gp96123.workers.dev/api';
+            return 'https://your-worker-name.your-subdomain.workers.dev/api';
         }
 
-        // 自定义域名环境
+        // 自定义域名环境 - 默认尝试相对路径，如果失败会降级到缓存
+        console.warn('未配置API地址，使用相对路径。如果出现错误，请配置正确的Workers API地址。');
         return '/api';
     })(),
 

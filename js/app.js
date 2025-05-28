@@ -17,6 +17,9 @@ const imValue1 = document.getElementById('imValue1');
 const imType2 = document.getElementById('imType2');
 const imValue2 = document.getElementById('imValue2');
 const previewArea = document.getElementById('previewArea');
+const actualPreviewArea = document.getElementById('actualPreviewArea');
+const scaledPreviewContainer = document.getElementById('scaledPreviewContainer');
+const actualPreviewContainer = document.getElementById('actualPreviewContainer');
 
 // 按钮元素
 const exportImage = document.getElementById('exportImage');
@@ -232,6 +235,7 @@ function updatePreview() {
     }
 
     if (!company || !name || !dept || (company.isDefault && (!company.name || !company.address))) {
+        // 更新缩放预览
         previewArea.innerHTML = `
             <div class="text-center">
                 <p class="text-lg mb-2">请完善表单信息</p>
@@ -239,11 +243,21 @@ function updatePreview() {
             </div>
         `;
         previewArea.className = "signature-preview flex items-center justify-center min-h-64 text-gray-500 bg-gray-50 border-2 border-dashed border-gray-300 rounded-lg";
+
+        // 更新实际尺寸预览
+        actualPreviewArea.innerHTML = `
+            <div class="text-center">
+                <p class="text-lg mb-2">请完善表单信息</p>
+                <p class="text-sm">选择公司并填写姓名、部门后即可预览签名</p>
+            </div>
+        `;
+        actualPreviewArea.className = "signature-preview-actual flex items-center justify-center text-gray-500 bg-gray-50";
         return;
     }
 
     // 移除默认样式，准备显示签名
     previewArea.className = "signature-preview";
+    actualPreviewArea.className = "signature-preview-actual";
 
     // 获取个人联系方式（只显示用户填写的）
     const personalContacts = [];
@@ -270,10 +284,10 @@ function updatePreview() {
         });
     }
 
-    // 使用原图比例创建预览 - 确保与Canvas导出一致
+    // 缩放预览 (50%)
     const originalWidth = 1600;
     const originalHeight = 580;
-    const scale = 0.5; // 缩放比例，预览为原图的50%
+    const scale = 0.5;
     const containerWidth = originalWidth * scale; // 800px
     const containerHeight = originalHeight * scale; // 290px
 
@@ -284,12 +298,23 @@ function updatePreview() {
             ${renderOfficeInfo(scale)}
             <!-- 预览提示文字 -->
             <div style="position: absolute; bottom: 5px; left: 5px; background: rgba(0,0,0,0.7); color: white; padding: 4px 8px; border-radius: 4px; font-size: 10px; line-height: 1.2; z-index: 10;">
-                <div style="margin-bottom: 2px;">预览尺寸非实际尺寸</div>
-                <div>Preview size differs from actual output</div>
+                <div style="margin-bottom: 2px;">缩放预览 (50%)</div>
+                <div>Scaled Preview (50%)</div>
             </div>
-            <div style="position: absolute; bottom: 5px; right: 5px; background: rgba(0,0,0,0.7); color: white; padding: 4px 8px; border-radius: 4px; font-size: 10px; line-height: 1.2; z-index: 10;">
-                <div style="margin-bottom: 2px;">请下载或复制查看实际效果</div>
-                <div>Download or copy to view actual results</div>
+        </div>
+    `;
+
+    // 实际尺寸预览 (100%)
+    const actualScale = 1.0;
+    actualPreviewArea.innerHTML = `
+        <div style="width: ${originalWidth}px; height: ${originalHeight}px; font-family: Arial, sans-serif; background-image: url('./images/back.png'); background-size: ${originalWidth}px ${originalHeight}px; background-position: 0 0; background-repeat: no-repeat; position: relative; overflow: hidden; border: 1px solid #ddd;">
+            ${renderPersonalInfo(name, dept, company, actualScale)}
+            ${renderContactInfo(company, personalContacts, actualScale)}
+            ${renderOfficeInfo(actualScale)}
+            <!-- 实际尺寸标识 -->
+            <div style="position: absolute; bottom: 5px; left: 5px; background: rgba(0,0,0,0.7); color: white; padding: 4px 8px; border-radius: 4px; font-size: 12px; line-height: 1.2; z-index: 10;">
+                <div style="margin-bottom: 2px;">实际输出尺寸</div>
+                <div>Actual Output Size</div>
             </div>
         </div>
     `;
@@ -735,6 +760,19 @@ async function initializeApp() {
     }
 }
 
+// 预览模式切换功能
+function switchPreviewMode() {
+    const selectedMode = document.querySelector('input[name="previewMode"]:checked').value;
+
+    if (selectedMode === 'scaled') {
+        scaledPreviewContainer.classList.remove('hidden');
+        actualPreviewContainer.classList.add('hidden');
+    } else {
+        scaledPreviewContainer.classList.add('hidden');
+        actualPreviewContainer.classList.remove('hidden');
+    }
+}
+
 // 事件监听器
 document.addEventListener('DOMContentLoaded', function() {
     // 表单变化监听
@@ -747,6 +785,12 @@ document.addEventListener('DOMContentLoaded', function() {
             updateStatus();
             enableButtons();
         });
+    });
+
+    // 预览模式切换监听
+    const previewModeRadios = document.querySelectorAll('input[name="previewMode"]');
+    previewModeRadios.forEach(radio => {
+        radio.addEventListener('change', switchPreviewMode);
     });
 
     // 按钮事件
