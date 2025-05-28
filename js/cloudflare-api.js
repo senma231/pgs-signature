@@ -7,34 +7,51 @@
 const API_CONFIG = {
     // 根据部署环境自动检测API地址
     baseURL: (() => {
+        console.log('🔍 开始检测API配置...');
+
         const hostname = window.location.hostname;
+        console.log('🌐 当前域名:', hostname);
 
         // 检查是否有环境变量配置（通过meta标签或全局变量）
-        const envApiUrl = document.querySelector('meta[name="api-url"]')?.content ||
-                         window.CLOUDFLARE_API_URL;
+        const metaApiUrl = document.querySelector('meta[name="api-url"]')?.content;
+        const globalApiUrl = window.CLOUDFLARE_API_URL;
+
+        console.log('📋 配置检查结果:');
+        console.log('  - Meta标签API地址:', metaApiUrl);
+        console.log('  - 全局变量API地址:', globalApiUrl);
+
+        const envApiUrl = metaApiUrl || globalApiUrl;
 
         if (envApiUrl) {
-            console.log('使用配置的API地址:', envApiUrl);
+            console.log('✅ 使用配置的API地址:', envApiUrl);
             return envApiUrl;
         }
 
         // 本地开发环境
         if (hostname === 'localhost' || hostname === '127.0.0.1') {
+            console.log('🔧 检测到本地开发环境');
             return 'http://localhost:8787/api'; // Wrangler dev server
         }
 
         // GitHub Pages环境
         if (hostname.includes('github.io')) {
+            console.log('🔧 检测到GitHub Pages环境');
+            console.warn('⚠️ 请配置正确的Workers API地址');
             return 'https://your-worker-name.your-subdomain.workers.dev/api';
         }
 
         // Cloudflare Pages环境
         if (hostname.includes('pages.dev')) {
+            console.log('🔧 检测到Cloudflare Pages环境');
+            console.warn('⚠️ 请配置正确的Workers API地址');
             return 'https://your-worker-name.your-subdomain.workers.dev/api';
         }
 
-        // 自定义域名环境 - 默认尝试相对路径，如果失败会降级到缓存
-        console.warn('未配置API地址，使用相对路径。如果出现错误，请配置正确的Workers API地址。');
+        // 自定义域名环境 - 这里需要配置
+        console.log('⚠️ 检测到自定义域名环境，但未找到API配置！');
+        console.log('❌ 请在HTML中添加meta标签配置API地址');
+        console.log('💡 示例: <meta name="api-url" content="https://your-worker.workers.dev/api">');
+        console.warn('🔄 将尝试使用相对路径，但可能会失败');
         return '/api';
     })(),
 
@@ -68,7 +85,8 @@ class CloudflareApiClient {
         // 重试机制
         for (let i = 0; i < this.retries; i++) {
             try {
-                console.log(`API请求 [尝试 ${i + 1}/${this.retries}]:`, url);
+                console.log(`🔗 API请求 [尝试 ${i + 1}/${this.retries}]:`, url);
+                console.log(`📋 请求配置:`, config);
 
                 const controller = new AbortController();
                 const timeoutId = setTimeout(() => controller.abort(), this.timeout);
@@ -80,18 +98,32 @@ class CloudflareApiClient {
 
                 clearTimeout(timeoutId);
 
+                console.log(`📡 响应状态:`, response.status, response.statusText);
+                console.log(`📄 响应头:`, Object.fromEntries(response.headers.entries()));
+
+                // 检查响应内容类型
+                const contentType = response.headers.get('content-type');
+                console.log(`📝 内容类型:`, contentType);
+
+                if (!contentType || !contentType.includes('application/json')) {
+                    // 如果不是JSON，读取文本内容用于调试
+                    const text = await response.text();
+                    console.error(`❌ 响应不是JSON格式:`, text.substring(0, 500));
+                    throw new Error(`API返回了非JSON响应 (${response.status}): ${text.substring(0, 100)}...`);
+                }
+
                 const data = await response.json();
 
                 if (!response.ok) {
                     throw new Error(data.error || `HTTP ${response.status}`);
                 }
 
-                console.log(`API响应成功:`, data);
+                console.log(`✅ API响应成功:`, data);
                 return data;
 
             } catch (error) {
                 lastError = error;
-                console.warn(`API请求失败 [尝试 ${i + 1}/${this.retries}]:`, error.message);
+                console.warn(`⚠️ API请求失败 [尝试 ${i + 1}/${this.retries}]:`, error.message);
 
                 // 如果不是最后一次尝试，等待后重试
                 if (i < this.retries - 1) {
@@ -100,7 +132,7 @@ class CloudflareApiClient {
             }
         }
 
-        console.error(`API请求最终失败:`, lastError);
+        console.error(`❌ API请求最终失败:`, lastError);
         throw lastError;
     }
 
