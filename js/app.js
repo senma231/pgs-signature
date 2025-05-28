@@ -224,7 +224,7 @@ function getBackgroundImage(isPreview = true) {
         return isPreview ? window.BACKGROUND_CONFIG.preview : window.BACKGROUND_CONFIG.export;
     }
     // 默认使用back.png
-    return './public/back.png';
+    return 'public/back.png';
 }
 
 // 更新预览
