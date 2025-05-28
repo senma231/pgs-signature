@@ -4,10 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>网络连接测试 - Email Signature Generator</title>
-    
-    <!-- API配置 -->
-    <meta name="api-url" content="https://signature-api.gp96123.workers.dev/api">
-    
+
+    <!-- API配置 - 使用自定义域名解决中国大陆访问问题 -->
+    <meta name="api-url" content="https://sign-api.pgs-log.cn/api">
+
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         .test-result {
@@ -25,7 +25,7 @@
 <body class="bg-gray-50 min-h-screen">
     <div class="container mx-auto px-4 py-8 max-w-4xl">
         <h1 class="text-3xl font-bold text-center mb-8">🌐 网络连接诊断工具</h1>
-        
+
         <!-- 基本信息 -->
         <div class="bg-white rounded-lg shadow p-6 mb-6">
             <h2 class="text-xl font-semibold mb-4">📋 环境信息</h2>
@@ -71,7 +71,7 @@
             document.getElementById('hostname').textContent = window.location.hostname;
             document.getElementById('userAgent').textContent = navigator.userAgent.substring(0, 80) + '...';
             document.getElementById('networkStatus').textContent = navigator.onLine ? '在线' : '离线';
-            
+
             const apiUrl = document.querySelector('meta[name="api-url"]')?.content || '未配置';
             document.getElementById('apiUrl').textContent = apiUrl;
         }
@@ -88,20 +88,20 @@
 
         // 清空结果
         function clearResults() {
-            document.getElementById('testResults').innerHTML = 
+            document.getElementById('testResults').innerHTML =
                 '<div class="info test-result">结果已清空，点击测试按钮开始新的测试...</div>';
         }
 
         // 基础连接测试
         async function testBasicConnection() {
             addResult('开始基础连接测试...', 'info');
-            
+
             const apiUrl = document.querySelector('meta[name="api-url"]').content;
             const testUrl = apiUrl + '/health';
-            
+
             try {
                 addResult(`测试URL: ${testUrl}`, 'info');
-                
+
                 const startTime = Date.now();
                 const response = await fetch(testUrl, {
                     method: 'GET',
@@ -109,14 +109,14 @@
                     credentials: 'omit'
                 });
                 const endTime = Date.now();
-                
+
                 addResult(`响应时间: ${endTime - startTime}ms`, 'info');
-                addResult(`HTTP状态: ${response.status} ${response.statusText}`, 
+                addResult(`HTTP状态: ${response.status} ${response.statusText}`,
                     response.ok ? 'success' : 'error');
-                
+
                 const contentType = response.headers.get('content-type');
                 addResult(`内容类型: ${contentType}`, 'info');
-                
+
                 if (response.ok) {
                     if (contentType && contentType.includes('application/json')) {
                         const data = await response.json();
@@ -130,10 +130,10 @@
                 } else {
                     addResult(`❌ HTTP错误: ${response.status}`, 'error');
                 }
-                
+
             } catch (error) {
                 addResult(`❌ 基础连接测试失败: ${error.message}`, 'error');
-                
+
                 // 详细错误分析
                 if (error.name === 'TypeError' && error.message.includes('CORS')) {
                     addResult(`🚫 CORS错误 - 可能是服务器未正确配置CORS头`, 'error');
@@ -148,34 +148,34 @@
         // CORS专项测试
         async function testCors() {
             addResult('开始CORS专项测试...', 'info');
-            
+
             const apiUrl = document.querySelector('meta[name="api-url"]').content;
             const testUrl = apiUrl + '/health';
-            
+
             // 测试不同的CORS配置
             const corsConfigs = [
                 { mode: 'cors', credentials: 'omit', name: '标准CORS' },
                 { mode: 'cors', credentials: 'include', name: '包含凭据的CORS' },
                 { mode: 'no-cors', name: '无CORS模式' }
             ];
-            
+
             for (const config of corsConfigs) {
                 try {
                     addResult(`测试 ${config.name}...`, 'info');
-                    
+
                     const response = await fetch(testUrl, {
                         method: 'GET',
                         mode: config.mode,
                         credentials: config.credentials || 'omit'
                     });
-                    
+
                     if (config.mode === 'no-cors') {
                         addResult(`${config.name}: 请求已发送（无法读取响应）`, 'warning');
                     } else {
-                        addResult(`${config.name}: ${response.status} ${response.statusText}`, 
+                        addResult(`${config.name}: ${response.status} ${response.statusText}`,
                             response.ok ? 'success' : 'warning');
                     }
-                    
+
                 } catch (error) {
                     addResult(`${config.name} 失败: ${error.message}`, 'error');
                 }
@@ -185,20 +185,20 @@
         // 超时测试
         async function testTimeout() {
             addResult('开始超时测试...', 'info');
-            
+
             const apiUrl = document.querySelector('meta[name="api-url"]').content;
             const testUrl = apiUrl + '/health';
-            
+
             // 测试不同的超时设置
             const timeouts = [5000, 10000, 15000]; // 5秒, 10秒, 15秒
-            
+
             for (const timeout of timeouts) {
                 try {
                     addResult(`测试 ${timeout}ms 超时...`, 'info');
-                    
+
                     const controller = new AbortController();
                     const timeoutId = setTimeout(() => controller.abort(), timeout);
-                    
+
                     const startTime = Date.now();
                     const response = await fetch(testUrl, {
                         method: 'GET',
@@ -207,11 +207,11 @@
                         signal: controller.signal
                     });
                     const endTime = Date.now();
-                    
+
                     clearTimeout(timeoutId);
-                    
+
                     addResult(`${timeout}ms 超时测试成功，实际用时: ${endTime - startTime}ms`, 'success');
-                    
+
                 } catch (error) {
                     if (error.name === 'AbortError') {
                         addResult(`${timeout}ms 超时测试: 请求被中止（超时）`, 'warning');
