@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>网络连接测试 - Email Signature Generator</title>
+    
+    <!-- API配置 -->
+    <meta name="api-url" content="https://signature-api.gp96123.workers.dev/api">
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .test-result {
+            padding: 12px;
+            margin: 8px 0;
+            border-radius: 6px;
+            font-family: monospace;
+        }
+        .success { background-color: #dcfce7; color: #166534; border: 1px solid #bbf7d0; }
+        .error { background-color: #fef2f2; color: #dc2626; border: 1px solid #fecaca; }
+        .warning { background-color: #fefce8; color: #ca8a04; border: 1px solid #fef3c7; }
+        .info { background-color: #eff6ff; color: #2563eb; border: 1px solid #dbeafe; }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <div class="container mx-auto px-4 py-8 max-w-4xl">
+        <h1 class="text-3xl font-bold text-center mb-8">🌐 网络连接诊断工具</h1>
+        
+        <!-- 基本信息 -->
+        <div class="bg-white rounded-lg shadow p-6 mb-6">
+            <h2 class="text-xl font-semibold mb-4">📋 环境信息</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                <div><strong>当前域名:</strong> <span id="hostname"></span></div>
+                <div><strong>用户代理:</strong> <span id="userAgent"></span></div>
+                <div><strong>网络状态:</strong> <span id="networkStatus"></span></div>
+                <div><strong>API地址:</strong> <span id="apiUrl"></span></div>
+            </div>
+        </div>
+
+        <!-- 测试按钮 -->
+        <div class="bg-white rounded-lg shadow p-6 mb-6">
+            <h2 class="text-xl font-semibold mb-4">🧪 连接测试</h2>
+            <div class="flex flex-wrap gap-4">
+                <button id="testBasic" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded">
+                    基础连接测试
+                </button>
+                <button id="testCors" class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded">
+                    CORS测试
+                </button>
+                <button id="testTimeout" class="bg-yellow-500 hover:bg-yellow-600 text-white px-4 py-2 rounded">
+                    超时测试
+                </button>
+                <button id="clearResults" class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded">
+                    清空结果
+                </button>
+            </div>
+        </div>
+
+        <!-- 测试结果 -->
+        <div class="bg-white rounded-lg shadow p-6">
+            <h2 class="text-xl font-semibold mb-4">📊 测试结果</h2>
+            <div id="testResults" class="space-y-2">
+                <div class="info test-result">点击上方按钮开始测试...</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 初始化页面信息
+        function initializeInfo() {
+            document.getElementById('hostname').textContent = window.location.hostname;
+            document.getElementById('userAgent').textContent = navigator.userAgent.substring(0, 80) + '...';
+            document.getElementById('networkStatus').textContent = navigator.onLine ? '在线' : '离线';
+            
+            const apiUrl = document.querySelector('meta[name="api-url"]')?.content || '未配置';
+            document.getElementById('apiUrl').textContent = apiUrl;
+        }
+
+        // 添加测试结果
+        function addResult(message, type = 'info') {
+            const container = document.getElementById('testResults');
+            const result = document.createElement('div');
+            result.className = `test-result ${type}`;
+            result.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+            container.appendChild(result);
+            container.scrollTop = container.scrollHeight;
+        }
+
+        // 清空结果
+        function clearResults() {
+            document.getElementById('testResults').innerHTML = 
+                '<div class="info test-result">结果已清空，点击测试按钮开始新的测试...</div>';
+        }
+
+        // 基础连接测试
+        async function testBasicConnection() {
+            addResult('开始基础连接测试...', 'info');
+            
+            const apiUrl = document.querySelector('meta[name="api-url"]').content;
+            const testUrl = apiUrl + '/health';
+            
+            try {
+                addResult(`测试URL: ${testUrl}`, 'info');
+                
+                const startTime = Date.now();
+                const response = await fetch(testUrl, {
+                    method: 'GET',
+                    mode: 'cors',
+                    credentials: 'omit'
+                });
+                const endTime = Date.now();
+                
+                addResult(`响应时间: ${endTime - startTime}ms`, 'info');
+                addResult(`HTTP状态: ${response.status} ${response.statusText}`, 
+                    response.ok ? 'success' : 'error');
+                
+                const contentType = response.headers.get('content-type');
+                addResult(`内容类型: ${contentType}`, 'info');
+                
+                if (response.ok) {
+                    if (contentType && contentType.includes('application/json')) {
+                        const data = await response.json();
+                        addResult(`✅ 基础连接测试成功`, 'success');
+                        addResult(`响应数据: ${JSON.stringify(data)}`, 'success');
+                    } else {
+                        addResult(`⚠️ 响应不是JSON格式`, 'warning');
+                        const text = await response.text();
+                        addResult(`响应内容: ${text.substring(0, 100)}...`, 'warning');
+                    }
+                } else {
+                    addResult(`❌ HTTP错误: ${response.status}`, 'error');
+                }
+                
+            } catch (error) {
+                addResult(`❌ 基础连接测试失败: ${error.message}`, 'error');
+                
+                // 详细错误分析
+                if (error.name === 'TypeError' && error.message.includes('CORS')) {
+                    addResult(`🚫 CORS错误 - 可能是服务器未正确配置CORS头`, 'error');
+                } else if (error.message.includes('ERR_CONNECTION_TIMED_OUT')) {
+                    addResult(`⏰ 连接超时 - 可能是网络问题或服务器无响应`, 'error');
+                } else if (error.message.includes('ERR_NAME_NOT_RESOLVED')) {
+                    addResult(`🌐 DNS解析失败 - 请检查域名是否正确`, 'error');
+                }
+            }
+        }
+
+        // CORS专项测试
+        async function testCors() {
+            addResult('开始CORS专项测试...', 'info');
+            
+            const apiUrl = document.querySelector('meta[name="api-url"]').content;
+            const testUrl = apiUrl + '/health';
+            
+            // 测试不同的CORS配置
+            const corsConfigs = [
+                { mode: 'cors', credentials: 'omit', name: '标准CORS' },
+                { mode: 'cors', credentials: 'include', name: '包含凭据的CORS' },
+                { mode: 'no-cors', name: '无CORS模式' }
+            ];
+            
+            for (const config of corsConfigs) {
+                try {
+                    addResult(`测试 ${config.name}...`, 'info');
+                    
+                    const response = await fetch(testUrl, {
+                        method: 'GET',
+                        mode: config.mode,
+                        credentials: config.credentials || 'omit'
+                    });
+                    
+                    if (config.mode === 'no-cors') {
+                        addResult(`${config.name}: 请求已发送（无法读取响应）`, 'warning');
+                    } else {
+                        addResult(`${config.name}: ${response.status} ${response.statusText}`, 
+                            response.ok ? 'success' : 'warning');
+                    }
+                    
+                } catch (error) {
+                    addResult(`${config.name} 失败: ${error.message}`, 'error');
+                }
+            }
+        }
+
+        // 超时测试
+        async function testTimeout() {
+            addResult('开始超时测试...', 'info');
+            
+            const apiUrl = document.querySelector('meta[name="api-url"]').content;
+            const testUrl = apiUrl + '/health';
+            
+            // 测试不同的超时设置
+            const timeouts = [5000, 10000, 15000]; // 5秒, 10秒, 15秒
+            
+            for (const timeout of timeouts) {
+                try {
+                    addResult(`测试 ${timeout}ms 超时...`, 'info');
+                    
+                    const controller = new AbortController();
+                    const timeoutId = setTimeout(() => controller.abort(), timeout);
+                    
+                    const startTime = Date.now();
+                    const response = await fetch(testUrl, {
+                        method: 'GET',
+                        mode: 'cors',
+                        credentials: 'omit',
+                        signal: controller.signal
+                    });
+                    const endTime = Date.now();
+                    
+                    clearTimeout(timeoutId);
+                    
+                    addResult(`${timeout}ms 超时测试成功，实际用时: ${endTime - startTime}ms`, 'success');
+                    
+                } catch (error) {
+                    if (error.name === 'AbortError') {
+                        addResult(`${timeout}ms 超时测试: 请求被中止（超时）`, 'warning');
+                    } else {
+                        addResult(`${timeout}ms 超时测试失败: ${error.message}`, 'error');
+                    }
+                }
+            }
+        }
+
+        // 绑定事件
+        document.getElementById('testBasic').addEventListener('click', testBasicConnection);
+        document.getElementById('testCors').addEventListener('click', testCors);
+        document.getElementById('testTimeout').addEventListener('click', testTimeout);
+        document.getElementById('clearResults').addEventListener('click', clearResults);
+
+        // 页面加载完成后初始化
+        document.addEventListener('DOMContentLoaded', initializeInfo);
+
+        // 监听网络状态变化
+        window.addEventListener('online', () => {
+            addResult('网络连接已恢复', 'success');
+            document.getElementById('networkStatus').textContent = '在线';
+        });
+
+        window.addEventListener('offline', () => {
+            addResult('网络连接已断开', 'error');
+            document.getElementById('networkStatus').textContent = '离线';
+        });
+    </script>
+</body>
+</html>

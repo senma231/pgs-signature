@@ -55,8 +55,8 @@ const API_CONFIG = {
         return '/api';
     })(),
 
-    timeout: 10000, // 10秒超时
-    retries: 3      // 重试次数
+    timeout: 15000, // 15秒超时
+    retries: 2      // 减少重试次数避免过多请求
 };
 
 class CloudflareApiClient {
@@ -86,48 +86,63 @@ class CloudflareApiClient {
         for (let i = 0; i < this.retries; i++) {
             try {
                 console.log(`🔗 API请求 [尝试 ${i + 1}/${this.retries}]:`, url);
-                console.log(`📋 请求配置:`, config);
 
                 const controller = new AbortController();
-                const timeoutId = setTimeout(() => controller.abort(), this.timeout);
+                const timeoutId = setTimeout(() => {
+                    console.warn(`⏰ 请求超时，正在中止请求...`);
+                    controller.abort();
+                }, this.timeout);
 
                 const response = await fetch(url, {
                     ...config,
-                    signal: controller.signal
+                    signal: controller.signal,
+                    mode: 'cors', // 明确指定CORS模式
+                    credentials: 'omit' // 不发送凭据
                 });
 
                 clearTimeout(timeoutId);
 
                 console.log(`📡 响应状态:`, response.status, response.statusText);
-                console.log(`📄 响应头:`, Object.fromEntries(response.headers.entries()));
 
                 // 检查响应内容类型
                 const contentType = response.headers.get('content-type');
                 console.log(`📝 内容类型:`, contentType);
 
-                if (!contentType || !contentType.includes('application/json')) {
-                    // 如果不是JSON，读取文本内容用于调试
+                if (!response.ok) {
                     const text = await response.text();
-                    console.error(`❌ 响应不是JSON格式:`, text.substring(0, 500));
-                    throw new Error(`API返回了非JSON响应 (${response.status}): ${text.substring(0, 100)}...`);
+                    console.error(`❌ HTTP错误 ${response.status}:`, text.substring(0, 200));
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+
+                if (!contentType || !contentType.includes('application/json')) {
+                    const text = await response.text();
+                    console.error(`❌ 响应不是JSON格式:`, text.substring(0, 200));
+                    throw new Error(`API返回了非JSON响应: ${text.substring(0, 50)}...`);
                 }
 
                 const data = await response.json();
-
-                if (!response.ok) {
-                    throw new Error(data.error || `HTTP ${response.status}`);
-                }
-
                 console.log(`✅ API响应成功:`, data);
                 return data;
 
             } catch (error) {
                 lastError = error;
-                console.warn(`⚠️ API请求失败 [尝试 ${i + 1}/${this.retries}]:`, error.message);
+
+                // 特殊处理不同类型的错误
+                if (error.name === 'AbortError') {
+                    console.warn(`⏰ 请求超时 [尝试 ${i + 1}/${this.retries}]`);
+                } else if (error.message.includes('CORS')) {
+                    console.warn(`🚫 CORS错误 [尝试 ${i + 1}/${this.retries}]:`, error.message);
+                } else if (error.message.includes('ERR_CONNECTION_TIMED_OUT')) {
+                    console.warn(`🌐 网络连接超时 [尝试 ${i + 1}/${this.retries}]`);
+                } else {
+                    console.warn(`⚠️ API请求失败 [尝试 ${i + 1}/${this.retries}]:`, error.message);
+                }
 
                 // 如果不是最后一次尝试，等待后重试
                 if (i < this.retries - 1) {
-                    await this.delay(1000 * (i + 1)); // 递增延迟
+                    const delay = Math.min(2000 * (i + 1), 5000); // 最大5秒延迟
+                    console.log(`⏳ 等待 ${delay}ms 后重试...`);
+                    await this.delay(delay);
                 }
             }
         }
@@ -228,30 +243,51 @@ class CloudflareCompanyManager {
 
             if (this.isOnline) {
                 // 在线模式：从服务器获取
-                this.companies = await this.apiClient.getCompanies();
+                try {
+                    this.companies = await this.apiClient.getCompanies();
 
-                // 缓存到本地
-                this.saveToCache(this.companies);
+                    // 缓存到本地
+                    this.saveToCache(this.companies);
 
-                console.log('公司数据加载成功:', Object.keys(this.companies).length, '家公司');
+                    console.log('公司数据加载成功:', Object.keys(this.companies).length, '家公司');
+                    this.isLoaded = true;
+                    return this.companies;
+
+                } catch (apiError) {
+                    console.warn('API请求失败，尝试降级处理:', apiError.message);
+
+                    // 检查是否是CORS或网络问题
+                    if (apiError.message.includes('CORS') ||
+                        apiError.message.includes('ERR_CONNECTION_TIMED_OUT') ||
+                        apiError.message.includes('AbortError')) {
+
+                        console.log('检测到网络或CORS问题，使用本地缓存数据');
+                        this.companies = this.loadFromCache();
+                        this.isLoaded = true;
+
+                        this.showNetworkError('网络连接问题，使用本地缓存数据。请检查网络连接或稍后重试。');
+                        return this.companies;
+                    }
+
+                    throw apiError; // 重新抛出其他类型的错误
+                }
             } else {
                 // 离线模式：从缓存获取
                 this.companies = this.loadFromCache();
                 console.log('离线模式：使用缓存数据');
+                this.isLoaded = true;
+                return this.companies;
             }
-
-            this.isLoaded = true;
-            return this.companies;
 
         } catch (error) {
             console.error('加载公司数据失败:', error);
 
-            // 降级到缓存数据
+            // 最终降级到缓存数据
             this.companies = this.loadFromCache();
             this.isLoaded = true;
 
             // 显示错误提示
-            this.showNetworkError('加载数据失败，使用本地缓存数据');
+            this.showNetworkError('数据加载失败，使用本地缓存数据');
 
             return this.companies;
         }
