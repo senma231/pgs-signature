@@ -104,9 +104,9 @@ function renderPersonalInfo(name, dept, company, scale = 1) {
 // 联系信息区域渲染函数 - 使用两列对齐布局
 function renderContactInfo(company, personalContacts, scale = 1) {
     const contactItems = [];
-    const labelWidth = 80 * scale; // 标签列宽度
-    const contentStartX = 90 * scale; // 内容列起始位置
-    const maxContentWidth = Math.floor(45 / scale); // 内容列最大字符数
+    const labelWidth = 100 * scale; // 标签列宽度（从80增加到100）
+    const contentStartX = 120 * scale; // 内容列起始位置
+    const maxContentWidth = Math.floor(40 / scale); // 内容列最大字符数（适当减少以适应新布局）
 
     // 创建两列对齐的项目函数
     function createAlignedItem(label, content) {
@@ -118,7 +118,7 @@ function renderContactInfo(company, personalContacts, scale = 1) {
                 // 第一行：显示标签和内容
                 itemHTML += `
                     <div style="display: flex; margin-bottom: 0px; line-height: 1.4;">
-                        <div style="width: ${labelWidth}px; text-align: left; padding-right: 10px; flex-shrink: 0;">
+                        <div style="width: ${labelWidth}px; text-align: left; padding-right: 20px; flex-shrink: 0;">
                             <strong>${label}:</strong>
                         </div>
                         <div style="flex: 1;">${line}</div>
@@ -128,7 +128,7 @@ function renderContactInfo(company, personalContacts, scale = 1) {
                 // 续行：只显示内容，与第一行内容对齐
                 itemHTML += `
                     <div style="display: flex; margin-bottom: 0px; line-height: 1.4;">
-                        <div style="width: ${labelWidth}px; padding-right: 10px; flex-shrink: 0;"></div>
+                        <div style="width: ${labelWidth}px; padding-right: 20px; flex-shrink: 0;"></div>
                         <div style="flex: 1;">${line}</div>
                     </div>
                 `;
@@ -347,11 +347,11 @@ function drawAlignedContactItem(ctx, label, content, x, y, labelWidth, maxConten
             ctx.textAlign = 'left';
             ctx.fillText(label + ':', x, currentY);
             ctx.textAlign = 'left';
-            ctx.fillText(line, x + labelWidth + 15, currentY);
+            ctx.fillText(line, x + labelWidth + 25, currentY); // 增加间距从15到25
         } else {
             // 续行：只绘制内容，与第一行内容对齐
             ctx.textAlign = 'left';
-            ctx.fillText(line, x + labelWidth + 15, currentY);
+            ctx.fillText(line, x + labelWidth + 25, currentY); // 增加间距从15到25
         }
         currentY += lineHeight;
     });
@@ -415,8 +415,8 @@ async function convertToImage() {
                 ctx.font = '28px Arial';
                 let yPos = 200;
                 const lineHeight = 40; // 行高
-                const labelWidth = 80; // 标签列宽度
-                const maxContentWidth = 950; // 内容列最大宽度
+                const labelWidth = 100; // 标签列宽度（从80增加到100）
+                const maxContentWidth = 900; // 内容列最大宽度（适当减少以适应新布局）
                 const startX = 500; // 起始X位置
 
                 // 添加地址（支持自动换行）
