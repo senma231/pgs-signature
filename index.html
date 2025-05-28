@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Email Signature Generator - 电子签名生成系统</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="./css/style.css">
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <!-- 头部 -->
+    <header class="bg-white shadow-sm border-b">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center py-4">
+                <div class="flex items-center">
+                    <img src="./images/logo.png" alt="Logo" class="h-8 w-8 mr-3">
+                    <h1 class="text-xl font-semibold text-gray-900">Email Signature Generator</h1>
+                </div>
+                <button id="manageCompanies" class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors">
+                    管理公司
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- 主要内容 -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <!-- 左侧表单 -->
+            <div class="bg-white rounded-lg shadow p-6">
+                <h2 class="text-lg font-medium text-gray-900 mb-6">签名信息</h2>
+
+                <!-- 公司选择 -->
+                <div class="mb-4">
+                    <label for="companySelect" class="block text-sm font-medium text-gray-700 mb-2">选择公司</label>
+                    <select id="companySelect" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <option value="">请选择公司</option>
+                    </select>
+                </div>
+
+                <!-- 个人信息 -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                    <div>
+                        <label for="name" class="block text-sm font-medium text-gray-700 mb-2">姓名 *</label>
+                        <input type="text" id="name" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+                    </div>
+                    <div>
+                        <label for="department" class="block text-sm font-medium text-gray-700 mb-2">部门 *</label>
+                        <input type="text" id="department" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+                    </div>
+                </div>
+
+                <!-- 联系信息 -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                    <div>
+                        <label for="tel" class="block text-sm font-medium text-gray-700 mb-2">电话</label>
+                        <input type="text" id="tel" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+                    <div>
+                        <label for="mobile" class="block text-sm font-medium text-gray-700 mb-2">手机</label>
+                        <input type="text" id="mobile" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                    <div>
+                        <label for="email" class="block text-sm font-medium text-gray-700 mb-2">邮箱</label>
+                        <input type="email" id="email" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+                    <div>
+                        <label for="fax" class="block text-sm font-medium text-gray-700 mb-2">传真</label>
+                        <input type="text" id="fax" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+                </div>
+
+                <!-- IM信息 -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                    <div>
+                        <label for="im1Type" class="block text-sm font-medium text-gray-700 mb-2">即时通讯1</label>
+                        <div class="flex gap-2">
+                            <select id="im1Type" class="border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                <option value="">选择类型</option>
+                                <option value="QQ">QQ</option>
+                                <option value="微信">微信</option>
+                                <option value="WhatsApp">WhatsApp</option>
+                                <option value="Line">Line</option>
+                                <option value="LinkedIn">LinkedIn</option>
+                            </select>
+                            <input type="text" id="im1Value" placeholder="账号" class="flex-1 border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        </div>
+                    </div>
+                    <div>
+                        <label for="im2Type" class="block text-sm font-medium text-gray-700 mb-2">即时通讯2</label>
+                        <div class="flex gap-2">
+                            <select id="im2Type" class="border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                <option value="">选择类型</option>
+                                <option value="QQ">QQ</option>
+                                <option value="微信">微信</option>
+                                <option value="WhatsApp">WhatsApp</option>
+                                <option value="Line">Line</option>
+                                <option value="LinkedIn">LinkedIn</option>
+                            </select>
+                            <input type="text" id="im2Value" placeholder="账号" class="flex-1 border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 操作按钮 -->
+                <div class="flex gap-4">
+                    <button id="generateBtn" class="flex-1 bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 transition-colors">
+                        生成签名
+                    </button>
+                    <button id="exportBtn" class="flex-1 bg-green-600 text-white py-2 px-4 rounded-md hover:bg-green-700 transition-colors">
+                        导出图片
+                    </button>
+                    <button id="copyBtn" class="flex-1 bg-purple-600 text-white py-2 px-4 rounded-md hover:bg-purple-700 transition-colors">
+                        复制图片
+                    </button>
+                </div>
+            </div>
+
+            <!-- 右侧预览 -->
+            <div class="bg-white rounded-lg shadow p-6">
+                <h2 class="text-lg font-medium text-gray-900 mb-4">签名预览</h2>
+                <div class="text-sm text-gray-600 mb-4">
+                    <p>📝 预览尺寸与实际输出尺寸不同，请下载或复制查看实际效果</p>
+                    <p>📝 Preview size differs from actual output size, please download or copy to view actual results</p>
+                </div>
+                <div id="previewContainer" class="border border-gray-200 rounded-lg p-4 bg-gray-50">
+                    <canvas id="signatureCanvas" class="max-w-full h-auto border border-gray-300 bg-white"></canvas>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- 公司管理模态框 -->
+    <div id="companyModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50">
+        <div class="flex items-center justify-center min-h-screen p-4">
+            <div class="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+                <div class="p-6">
+                    <div class="flex justify-between items-center mb-6">
+                        <h3 class="text-lg font-medium text-gray-900">公司管理</h3>
+                        <button id="closeModal" class="text-gray-400 hover:text-gray-600">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                            </svg>
+                        </button>
+                    </div>
+
+                    <!-- 添加新公司 -->
+                    <div class="mb-6 p-4 bg-gray-50 rounded-lg">
+                        <h4 class="font-medium text-gray-900 mb-4">添加新公司</h4>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                            <input type="text" id="newCompanyDisplayName" placeholder="显示名称 *" class="border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            <input type="text" id="newCompanyName" placeholder="公司名称 *" class="border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            <input type="text" id="newCompanyAddress" placeholder="公司地址 *" class="border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        </div>
+                        <button id="addCompany" class="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 transition-colors">
+                            添加公司
+                        </button>
+                    </div>
+
+                    <!-- 公司列表 -->
+                    <div>
+                        <h4 class="font-medium text-gray-900 mb-4">公司列表</h4>
+                        <div id="companyList" class="space-y-4">
+                            <!-- 公司列表将在这里动态生成 -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 脚本文件 -->
+    <script src="./js/cloudflare-api.js"></script>
+    <script src="./js/app.js"></script>
+</body>
+</html>
