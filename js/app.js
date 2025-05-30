@@ -626,7 +626,7 @@ async function exportImageHandler() {
     }
 }
 
-// 复制图片到剪贴板（JPG格式）
+// 复制图片到剪贴板（增强兼容性版本）
 async function copyImageHandler() {
     if (!validateForm()) {
         alert('请完善表单信息');
@@ -652,39 +652,67 @@ async function copyImageHandler() {
             return;
         }
 
-        // 转换为JPG格式，质量设置为0.9（90%）
-        canvas.toBlob(async (blob) => {
-            if (!blob) {
+        // 首先尝试PNG格式（兼容性更好）
+        canvas.toBlob(async (pngBlob) => {
+            if (!pngBlob) {
                 alert('图片转换失败，请重试');
                 return;
             }
 
             try {
-                // 创建ClipboardItem
+                // 尝试PNG格式复制（兼容性最好）
                 const clipboardItem = new ClipboardItem({
-                    'image/jpeg': blob
+                    'image/png': pngBlob
                 });
 
-                // 写入剪贴板
                 await navigator.clipboard.write([clipboardItem]);
-                alert('签名已复制到剪贴板（JPG格式）！');
+                alert('签名已复制到剪贴板（PNG格式）！');
 
-            } catch (clipboardError) {
-                console.error('Clipboard write error:', clipboardError);
+            } catch (pngError) {
+                console.error('PNG clipboard write error:', pngError);
 
-                // 提供备用方案：自动下载
-                const link = document.createElement('a');
-                link.download = `signature_${contactName.value.trim()}_${new Date().toISOString().split('T')[0]}.jpg`;
-                link.href = canvas.toDataURL('image/jpeg', 0.9);
-                link.click();
+                // PNG失败，尝试JPG格式
+                canvas.toBlob(async (jpgBlob) => {
+                    if (!jpgBlob) {
+                        // PNG和JPG都失败，直接下载
+                        downloadFallback(canvas);
+                        return;
+                    }
 
-                alert('复制到剪贴板失败，已自动下载图片文件');
+                    try {
+                        const jpgClipboardItem = new ClipboardItem({
+                            'image/jpeg': jpgBlob
+                        });
+
+                        await navigator.clipboard.write([jpgClipboardItem]);
+                        alert('签名已复制到剪贴板（JPG格式）！');
+
+                    } catch (jpgError) {
+                        console.error('JPG clipboard write error:', jpgError);
+                        // 所有格式都失败，使用下载备用方案
+                        downloadFallback(canvas);
+                    }
+                }, 'image/jpeg', 0.9);
             }
-        }, 'image/jpeg', 0.9); // JPG格式，90%质量
+        }, 'image/png');
 
     } catch (error) {
         console.error('Copy error:', error);
         alert('复制失败：' + error.message + '，请使用导出功能');
+    }
+}
+
+// 下载备用方案
+function downloadFallback(canvas) {
+    try {
+        const link = document.createElement('a');
+        link.download = `signature_${contactName.value.trim()}_${new Date().toISOString().split('T')[0]}.jpg`;
+        link.href = canvas.toDataURL('image/jpeg', 0.9);
+        link.click();
+        alert('复制到剪贴板失败，已自动下载图片文件');
+    } catch (downloadError) {
+        console.error('Download fallback error:', downloadError);
+        alert('复制和下载都失败，请使用导出功能');
     }
 }
 
