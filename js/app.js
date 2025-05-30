@@ -107,24 +107,21 @@ function calculateDynamicSpacing(totalItems, availableHeight = 340, baseLineHeig
 
     if (totalItems <= 1) return baseLineHeight;
 
-    // 计算理想间距：将可用空间均匀分配给所有项目
-    const idealSpacing = availableHeight / (totalItems * 28); // 28是字体大小
-
-    // 设置间距范围：最小1.2，最大2.5
+    // 设置间距范围：最小1.2，最大2.0（控制在2倍以内）
     const minSpacing = 1.2;
-    const maxSpacing = 2.5;
+    const maxSpacing = 2.0;
 
-    // 根据项目数量调整间距
+    // 根据项目数量调整间距，使用更保守的策略
     let dynamicSpacing;
     if (totalItems <= 3) {
-        // 项目少时，增加间距
-        dynamicSpacing = Math.min(maxSpacing, idealSpacing * 1.5);
+        // 项目少时，适度增加间距（最多到1.8倍）
+        dynamicSpacing = Math.min(1.8, baseLineHeight + (4 - totalItems) * 0.15);
     } else if (totalItems <= 6) {
-        // 中等项目数，使用理想间距
-        dynamicSpacing = Math.min(maxSpacing, Math.max(minSpacing, idealSpacing));
+        // 中等项目数，使用标准间距
+        dynamicSpacing = Math.max(1.3, baseLineHeight + (6 - totalItems) * 0.05);
     } else {
         // 项目多时，使用较小间距
-        dynamicSpacing = Math.max(minSpacing, idealSpacing * 0.8);
+        dynamicSpacing = Math.max(minSpacing, baseLineHeight - (totalItems - 6) * 0.02);
     }
 
     return Math.max(minSpacing, Math.min(maxSpacing, dynamicSpacing));
