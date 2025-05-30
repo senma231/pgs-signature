@@ -635,23 +635,56 @@ async function copyImageHandler() {
 
     try {
         const canvas = await convertToImage();
-        if (canvas) {
-            // 转换为JPG格式，质量设置为0.9（90%）
-            canvas.toBlob(async (blob) => {
-                try {
-                    await navigator.clipboard.write([
-                        new ClipboardItem({ 'image/jpeg': blob })
-                    ]);
-                    alert('签名已复制到剪贴板（JPG格式）！');
-                } catch (error) {
-                    console.error('Copy error:', error);
-                    alert('复制失败，请使用导出功能');
-                }
-            }, 'image/jpeg', 0.9); // JPG格式，90%质量
+        if (!canvas) {
+            alert('生成图片失败，请重试');
+            return;
         }
+
+        // 检查浏览器是否支持剪贴板API
+        if (!navigator.clipboard || !navigator.clipboard.write) {
+            alert('您的浏览器不支持复制图片功能，请使用导出功能');
+            return;
+        }
+
+        // 检查是否在HTTPS环境或localhost
+        if (location.protocol !== 'https:' && location.hostname !== 'localhost' && location.hostname !== '127.0.0.1') {
+            alert('复制图片功能需要HTTPS环境，请使用导出功能');
+            return;
+        }
+
+        // 转换为JPG格式，质量设置为0.9（90%）
+        canvas.toBlob(async (blob) => {
+            if (!blob) {
+                alert('图片转换失败，请重试');
+                return;
+            }
+
+            try {
+                // 创建ClipboardItem
+                const clipboardItem = new ClipboardItem({
+                    'image/jpeg': blob
+                });
+
+                // 写入剪贴板
+                await navigator.clipboard.write([clipboardItem]);
+                alert('签名已复制到剪贴板（JPG格式）！');
+
+            } catch (clipboardError) {
+                console.error('Clipboard write error:', clipboardError);
+
+                // 提供备用方案：自动下载
+                const link = document.createElement('a');
+                link.download = `signature_${contactName.value.trim()}_${new Date().toISOString().split('T')[0]}.jpg`;
+                link.href = canvas.toDataURL('image/jpeg', 0.9);
+                link.click();
+
+                alert('复制到剪贴板失败，已自动下载图片文件');
+            }
+        }, 'image/jpeg', 0.9); // JPG格式，90%质量
+
     } catch (error) {
         console.error('Copy error:', error);
-        alert('复制失败：' + error.message);
+        alert('复制失败：' + error.message + '，请使用导出功能');
     }
 }
 
