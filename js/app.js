@@ -100,23 +100,98 @@ function renderPersonalInfo(name, dept, company, scale = 1) {
     `;
 }
 
-// 联系信息区域渲染函数 - 使用两列对齐布局
+// 动态行距计算函数
+function calculateDynamicSpacing(totalItems, availableHeight = 340, baseLineHeight = 1.4) {
+    // 联系信息区域可用高度：从Y=180到底部办公地点Y=540，减去一些边距
+    // 可用高度约为 340px (540 - 180 - 20边距)
+
+    if (totalItems <= 1) return baseLineHeight;
+
+    // 计算理想间距：将可用空间均匀分配给所有项目
+    const idealSpacing = availableHeight / (totalItems * 28); // 28是字体大小
+
+    // 设置间距范围：最小1.2，最大2.5
+    const minSpacing = 1.2;
+    const maxSpacing = 2.5;
+
+    // 根据项目数量调整间距
+    let dynamicSpacing;
+    if (totalItems <= 3) {
+        // 项目少时，增加间距
+        dynamicSpacing = Math.min(maxSpacing, idealSpacing * 1.5);
+    } else if (totalItems <= 6) {
+        // 中等项目数，使用理想间距
+        dynamicSpacing = Math.min(maxSpacing, Math.max(minSpacing, idealSpacing));
+    } else {
+        // 项目多时，使用较小间距
+        dynamicSpacing = Math.max(minSpacing, idealSpacing * 0.8);
+    }
+
+    return Math.max(minSpacing, Math.min(maxSpacing, dynamicSpacing));
+}
+
+// 联系信息区域渲染函数 - 使用动态行距的两列对齐布局
 function renderContactInfo(company, personalContacts, scale = 1) {
     const contactItems = [];
     const labelWidth = 140 * scale; // 标签列宽度（增加到140以容纳E-mail等较长标签）
     const contentStartX = 160 * scale; // 内容列起始位置
     const maxContentWidth = Math.floor(90 / scale); // 内容列最大字符数（增加以匹配Canvas效果）
 
-    // 创建两列对齐的项目函数
-    function createAlignedItem(label, content) {
+    // 收集所有要显示的联系信息项目
+    const allContactItems = [];
+
+    // 添加公司地址（必显示）
+    allContactItems.push({ label: 'Add', content: company.address });
+
+    // 添加个人联系方式（只显示有值的）
+    const telValue = personalContacts.find(c => c.label === 'Tel')?.value;
+    if (telValue) {
+        allContactItems.push({ label: 'Tel', content: telValue });
+    }
+
+    const faxValue = personalContacts.find(c => c.label === 'Fax')?.value;
+    if (faxValue) {
+        allContactItems.push({ label: 'Fax', content: faxValue });
+    }
+
+    const mobileValue = personalContacts.find(c => c.label === 'Mobile')?.value;
+    if (mobileValue) {
+        allContactItems.push({ label: 'Mobile', content: mobileValue });
+    }
+
+    const emailValue = personalContacts.find(c => c.label === 'E-mail')?.value;
+    if (emailValue) {
+        allContactItems.push({ label: 'E-mail', content: emailValue });
+    }
+
+    // 添加IM即时通讯（如果有值）
+    const imContacts = personalContacts.filter(c => c.label === 'IM');
+    imContacts.forEach(imContact => {
+        allContactItems.push({ label: imContact.type, content: imContact.value });
+    });
+
+    // 添加固定的网站信息
+    allContactItems.push({ label: 'Website', content: 'www.pgs-log.com' });
+    allContactItems.push({ label: 'Group', content: 'www.francescoparisi.com' });
+
+    // 计算动态行距
+    const dynamicLineHeight = calculateDynamicSpacing(allContactItems.length);
+
+    // 创建两列对齐的项目函数（使用动态行距）
+    function createAlignedItem(label, content, isLast = false) {
         const contentLines = wrapTextForHTML(content, maxContentWidth);
         let itemHTML = '';
 
+        // 计算项目间距（最后一项不需要额外间距）
+        const itemMarginBottom = isLast ? 0 : Math.max(8, (dynamicLineHeight - 1.4) * 20);
+
         contentLines.forEach((line, index) => {
+            const lineMarginBottom = (index === contentLines.length - 1 && isLast) ? 0 : 0;
+
             if (index === 0) {
                 // 第一行：显示标签和内容，都靠左对齐
                 itemHTML += `
-                    <div style="display: flex; margin-bottom: 0px; line-height: 1.4;">
+                    <div style="display: flex; margin-bottom: ${lineMarginBottom}px; line-height: ${dynamicLineHeight};">
                         <div style="width: ${labelWidth}px; text-align: left; padding-right: 25px; flex-shrink: 0;">
                             <strong>${label}:</strong>
                         </div>
@@ -126,7 +201,7 @@ function renderContactInfo(company, personalContacts, scale = 1) {
             } else {
                 // 续行：只显示内容，与第一行内容对齐，内容靠左对齐
                 itemHTML += `
-                    <div style="display: flex; margin-bottom: 0px; line-height: 1.4;">
+                    <div style="display: flex; margin-bottom: ${lineMarginBottom}px; line-height: ${dynamicLineHeight};">
                         <div style="width: ${labelWidth}px; padding-right: 25px; flex-shrink: 0;"></div>
                         <div style="flex: 1; text-align: left;">${line}</div>
                     </div>
@@ -134,42 +209,19 @@ function renderContactInfo(company, personalContacts, scale = 1) {
             }
         });
 
+        // 添加项目间距
+        if (!isLast && itemMarginBottom > 0) {
+            itemHTML += `<div style="height: ${itemMarginBottom}px;"></div>`;
+        }
+
         return itemHTML;
     }
 
-    // 添加公司地址（必显示）
-    contactItems.push(createAlignedItem('Add', company.address));
-
-    // 添加个人联系方式（只显示有值的）
-    const telValue = personalContacts.find(c => c.label === 'Tel')?.value;
-    if (telValue) {
-        contactItems.push(createAlignedItem('Tel', telValue));
-    }
-
-    const faxValue = personalContacts.find(c => c.label === 'Fax')?.value;
-    if (faxValue) {
-        contactItems.push(createAlignedItem('Fax', faxValue));
-    }
-
-    const mobileValue = personalContacts.find(c => c.label === 'Mobile')?.value;
-    if (mobileValue) {
-        contactItems.push(createAlignedItem('Mobile', mobileValue));
-    }
-
-    const emailValue = personalContacts.find(c => c.label === 'E-mail')?.value;
-    if (emailValue) {
-        contactItems.push(createAlignedItem('E-mail', emailValue));
-    }
-
-    // 添加IM即时通讯（如果有值）
-    const imContacts = personalContacts.filter(c => c.label === 'IM');
-    imContacts.forEach(imContact => {
-        contactItems.push(createAlignedItem(imContact.type, imContact.value));
+    // 生成所有联系信息项目
+    allContactItems.forEach((item, index) => {
+        const isLast = index === allContactItems.length - 1;
+        contactItems.push(createAlignedItem(item.label, item.content, isLast));
     });
-
-    // 添加固定的网站信息
-    contactItems.push(createAlignedItem('Website', 'www.pgs-log.com'));
-    contactItems.push(createAlignedItem('Group', 'www.francescoparisi.com'));
 
     const baseX = 500 * scale;
     const baseY = 180 * scale;
@@ -348,8 +400,8 @@ function drawMultilineText(ctx, text, x, y, maxWidth, lineHeight) {
     return currentY; // 返回下一行的Y位置
 }
 
-// 绘制两列对齐的联系信息项目
-function drawAlignedContactItem(ctx, label, content, x, y, labelWidth, maxContentWidth, lineHeight) {
+// 绘制两列对齐的联系信息项目（支持动态行距）
+function drawAlignedContactItem(ctx, label, content, x, y, labelWidth, maxContentWidth, lineHeight, itemSpacing = 0) {
     const lines = wrapText(ctx, content, maxContentWidth);
     let currentY = y;
 
@@ -368,7 +420,75 @@ function drawAlignedContactItem(ctx, label, content, x, y, labelWidth, maxConten
         currentY += lineHeight;
     });
 
+    // 添加项目间距
+    currentY += itemSpacing;
+
     return currentY; // 返回下一行的Y位置
+}
+
+// Canvas动态行距渲染函数
+function renderContactInfoWithDynamicSpacing(ctx, company, personalContacts, startX, startY, labelWidth, maxContentWidth, baseLineHeight) {
+    // 收集所有要显示的联系信息项目
+    const allContactItems = [];
+
+    // 添加公司地址（必显示）
+    allContactItems.push({ label: 'Add', content: company.address });
+
+    // 添加个人联系方式（只显示有值的）
+    if (tel.value.trim()) {
+        allContactItems.push({ label: 'Tel', content: tel.value.trim() });
+    }
+    if (fax.value.trim()) {
+        allContactItems.push({ label: 'Fax', content: fax.value.trim() });
+    }
+    if (mobile.value.trim()) {
+        allContactItems.push({ label: 'Mobile', content: mobile.value.trim() });
+    }
+    if (email.value.trim()) {
+        allContactItems.push({ label: 'E-mail', content: email.value.trim() });
+    }
+
+    // 添加IM信息
+    if (imType1.value && imValue1.value.trim()) {
+        allContactItems.push({ label: imType1.value, content: imValue1.value.trim() });
+    }
+    if (imType2.value && imValue2.value.trim()) {
+        allContactItems.push({ label: imType2.value, content: imValue2.value.trim() });
+    }
+
+    // 添加固定的网站信息
+    allContactItems.push({ label: 'Website', content: 'www.pgs-log.com' });
+    allContactItems.push({ label: 'Group', content: 'www.francescoparisi.com' });
+
+    // 计算动态行距和项目间距
+    const dynamicLineHeightRatio = calculateDynamicSpacing(allContactItems.length);
+    const dynamicLineHeight = baseLineHeight * dynamicLineHeightRatio;
+
+    // 计算项目间距：根据动态行距调整
+    const baseItemSpacing = 5; // 基础项目间距
+    const dynamicItemSpacing = Math.max(baseItemSpacing, (dynamicLineHeightRatio - 1.4) * 15);
+
+    let yPos = startY;
+
+    // 渲染所有联系信息项目
+    allContactItems.forEach((item, index) => {
+        const isLast = index === allContactItems.length - 1;
+        const itemSpacing = isLast ? 0 : dynamicItemSpacing;
+
+        yPos = drawAlignedContactItem(
+            ctx,
+            item.label,
+            item.content,
+            startX,
+            yPos,
+            labelWidth,
+            maxContentWidth,
+            dynamicLineHeight,
+            itemSpacing
+        );
+    });
+
+    return yPos;
 }
 
 // 将签名转换为Canvas图片 - 使用原图尺寸确保精确定位
@@ -422,43 +542,26 @@ async function convertToImage() {
                 ctx.font = 'bold 36px Arial';
                 ctx.fillText(company.name.split('(')[0].trim(), 500, 155);
 
-                // 联系信息区域（蓝色文字）- 使用两列对齐布局
+                // 联系信息区域（蓝色文字）- 使用动态行距的两列对齐布局
                 ctx.fillStyle = '#144E8C';
                 ctx.font = '28px Arial';
-                let yPos = 200;
-                const lineHeight = 40; // 行高
+                const startY = 200;
+                const baseLineHeight = 40; // 基础行高
                 const labelWidth = 140; // 标签列宽度（与HTML预览保持一致）
                 const maxContentWidth = 950; // 内容列最大宽度（大幅增加以匹配HTML预览的饱满效果）
                 const startX = 500; // 起始X位置
 
-                // 添加地址（支持自动换行）
-                yPos = drawAlignedContactItem(ctx, 'Add', company.address, startX, yPos, labelWidth, maxContentWidth, lineHeight);
-
-                // 添加联系方式
-                if (tel.value.trim()) {
-                    yPos = drawAlignedContactItem(ctx, 'Tel', tel.value.trim(), startX, yPos, labelWidth, maxContentWidth, lineHeight);
-                }
-                if (fax.value.trim()) {
-                    yPos = drawAlignedContactItem(ctx, 'Fax', fax.value.trim(), startX, yPos, labelWidth, maxContentWidth, lineHeight);
-                }
-                if (mobile.value.trim()) {
-                    yPos = drawAlignedContactItem(ctx, 'Mobile', mobile.value.trim(), startX, yPos, labelWidth, maxContentWidth, lineHeight);
-                }
-                if (email.value.trim()) {
-                    yPos = drawAlignedContactItem(ctx, 'E-mail', email.value.trim(), startX, yPos, labelWidth, maxContentWidth, lineHeight);
-                }
-
-                // 添加IM信息
-                if (imType1.value && imValue1.value.trim()) {
-                    yPos = drawAlignedContactItem(ctx, imType1.value, imValue1.value.trim(), startX, yPos, labelWidth, maxContentWidth, lineHeight);
-                }
-                if (imType2.value && imValue2.value.trim()) {
-                    yPos = drawAlignedContactItem(ctx, imType2.value, imValue2.value.trim(), startX, yPos, labelWidth, maxContentWidth, lineHeight);
-                }
-
-                // 添加网站信息
-                yPos = drawAlignedContactItem(ctx, 'Website', 'www.pgs-log.com', startX, yPos, labelWidth, maxContentWidth, lineHeight);
-                yPos = drawAlignedContactItem(ctx, 'Group', 'www.francescoparisi.com', startX, yPos, labelWidth, maxContentWidth, lineHeight);
+                // 使用动态行距渲染联系信息
+                const finalYPos = renderContactInfoWithDynamicSpacing(
+                    ctx,
+                    company,
+                    [], // personalContacts参数（函数内部会直接读取表单元素）
+                    startX,
+                    startY,
+                    labelWidth,
+                    maxContentWidth,
+                    baseLineHeight
+                );
 
                 // 添加底部办公地点信息（白色文字）
                 ctx.fillStyle = 'white';
