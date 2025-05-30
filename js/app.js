@@ -626,7 +626,7 @@ async function exportImageHandler() {
     }
 }
 
-// 复制图片到剪贴板
+// 复制图片到剪贴板（JPG格式）
 async function copyImageHandler() {
     if (!validateForm()) {
         alert('请完善表单信息');
@@ -636,17 +636,18 @@ async function copyImageHandler() {
     try {
         const canvas = await convertToImage();
         if (canvas) {
+            // 转换为JPG格式，质量设置为0.9（90%）
             canvas.toBlob(async (blob) => {
                 try {
                     await navigator.clipboard.write([
-                        new ClipboardItem({ 'image/png': blob })
+                        new ClipboardItem({ 'image/jpeg': blob })
                     ]);
-                    alert('签名已复制到剪贴板！');
+                    alert('签名已复制到剪贴板（JPG格式）！');
                 } catch (error) {
                     console.error('Copy error:', error);
                     alert('复制失败，请使用导出功能');
                 }
-            }, 'image/png');
+            }, 'image/jpeg', 0.9); // JPG格式，90%质量
         }
     } catch (error) {
         console.error('Copy error:', error);
