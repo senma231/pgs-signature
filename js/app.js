@@ -101,17 +101,17 @@ function renderPersonalInfo(name, dept, company, scale = 1) {
 }
 
 // 动态行距计算函数
-function calculateDynamicSpacing(totalItems, availableHeight = 340, baseLineHeight = 1.4) {
-    // 联系信息区域可用高度：从Y=180到底部办公地点Y=540，减去一些边距
-    // 可用高度约为 340px (540 - 180 - 20边距)
+function calculateDynamicSpacing(totalItems, availableHeight = 365, baseLineHeight = 1.4) {
+    // 联系信息区域可用高度：从Y=200到底部办公地点Y=565，减去边距
+    // 可用高度约为 365px (565 - 200)
 
     if (totalItems <= 1) return baseLineHeight;
 
-    // 设置间距范围：最小1.2，最大2.0（控制在2倍以内）
-    const minSpacing = 1.2;
+    // 设置间距范围：最小1.1，最大2.0（控制在2倍以内）
+    const minSpacing = 1.1;
     const maxSpacing = 2.0;
 
-    // 根据项目数量调整间距，使用更保守的策略
+    // 根据项目数量调整间距，确保所有项目都能显示
     let dynamicSpacing;
     if (totalItems <= 3) {
         // 项目少时，适度增加间距（最多到1.8倍）
@@ -119,9 +119,12 @@ function calculateDynamicSpacing(totalItems, availableHeight = 340, baseLineHeig
     } else if (totalItems <= 6) {
         // 中等项目数，使用标准间距
         dynamicSpacing = Math.max(1.3, baseLineHeight + (6 - totalItems) * 0.05);
+    } else if (totalItems <= 8) {
+        // 较多项目时，使用较小间距
+        dynamicSpacing = Math.max(1.2, baseLineHeight - (totalItems - 6) * 0.05);
     } else {
-        // 项目多时，使用较小间距
-        dynamicSpacing = Math.max(minSpacing, baseLineHeight - (totalItems - 6) * 0.02);
+        // 项目很多时（9+），使用最小间距确保都能显示
+        dynamicSpacing = Math.max(minSpacing, 1.15 - (totalItems - 8) * 0.02);
     }
 
     return Math.max(minSpacing, Math.min(maxSpacing, dynamicSpacing));
@@ -179,8 +182,13 @@ function renderContactInfo(company, personalContacts, scale = 1) {
         const contentLines = wrapTextForHTML(content, maxContentWidth);
         let itemHTML = '';
 
-        // 计算项目间距（最后一项不需要额外间距）
-        const itemMarginBottom = isLast ? 0 : Math.max(8, (dynamicLineHeight - 1.4) * 20);
+        // 计算项目间距（最后一项不需要额外间距）- 与Canvas保持一致
+        let itemMarginBottom = isLast ? 0 : Math.max(5, (dynamicLineHeight - 1.4) * 15);
+
+        // 如果项目很多，进一步减少间距
+        if (allContactItems.length >= 9) {
+            itemMarginBottom = isLast ? 0 : Math.max(3, itemMarginBottom * 0.7);
+        }
 
         contentLines.forEach((line, index) => {
             const lineMarginBottom = (index === contentLines.length - 1 && isLast) ? 0 : 0;
@@ -457,13 +465,18 @@ function renderContactInfoWithDynamicSpacing(ctx, company, personalContacts, sta
     allContactItems.push({ label: 'Website', content: 'www.pgs-log.com' });
     allContactItems.push({ label: 'Group', content: 'www.francescoparisi.com' });
 
-    // 计算动态行距和项目间距
-    const dynamicLineHeightRatio = calculateDynamicSpacing(allContactItems.length);
-    const dynamicLineHeight = baseLineHeight * dynamicLineHeightRatio;
+    // 计算动态行距和项目间距 - 修复：与HTML预览保持一致
+    const dynamicLineHeightRatio = calculateDynamicSpacing(allContactItems.length, 365); // 传入可用高度
+    // 修复：直接使用比例计算像素行距，而不是乘以baseLineHeight
+    const dynamicLineHeight = 28 * dynamicLineHeightRatio; // 28px是字体大小，与HTML预览一致
 
-    // 计算项目间距：根据动态行距调整
-    const baseItemSpacing = 5; // 基础项目间距
-    const dynamicItemSpacing = Math.max(baseItemSpacing, (dynamicLineHeightRatio - 1.4) * 15);
+    // 计算项目间距：根据动态行距调整，与HTML预览保持一致，但确保不会超出可用空间
+    let dynamicItemSpacing = Math.max(5, (dynamicLineHeightRatio - 1.4) * 15); // 减少间距倍数
+
+    // 如果项目很多，进一步减少间距
+    if (allContactItems.length >= 9) {
+        dynamicItemSpacing = Math.max(3, dynamicItemSpacing * 0.7);
+    }
 
     let yPos = startY;
 
