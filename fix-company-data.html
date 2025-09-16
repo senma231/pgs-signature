@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>修复公司数据</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .company { border: 1px solid #ccc; margin: 10px 0; padding: 10px; }
+        .fix-button { background: #ff6600; color: white; padding: 10px 20px; border: none; cursor: pointer; margin: 5px; }
+        .fix-button:hover { background: #cc5500; }
+        pre { background: #f5f5f5; padding: 10px; overflow-x: auto; }
+        .success { color: green; }
+        .error { color: red; }
+    </style>
+</head>
+<body>
+    <h1>修复公司数据工具</h1>
+    
+    <div>
+        <button onclick="loadAndDisplayCompanies()">加载当前数据</button>
+        <button onclick="fixCBELCompany()" class="fix-button">修复CBEL公司名称</button>
+        <button onclick="addCorrectCBELCompany()" class="fix-button">添加正确的CBEL公司</button>
+    </div>
+    
+    <div id="output"></div>
+
+    <script src="./js/cloudflare-api.js"></script>
+    <script>
+        // 初始化管理器
+        const cloudflareCompanyManager = new CloudflareCompanyManager();
+        
+        async function loadAndDisplayCompanies() {
+            const output = document.getElementById('output');
+            output.innerHTML = '<p>正在加载数据...</p>';
+            
+            try {
+                await cloudflareCompanyManager.loadCompanies();
+                const companies = cloudflareCompanyManager.getCompanies();
+                
+                let html = '<h2>当前公司数据</h2>';
+                
+                Object.keys(companies).forEach(key => {
+                    const company = companies[key];
+                    html += `
+                        <div class="company">
+                            <div><strong>Key:</strong> ${key}</div>
+                            <div><strong>显示名称:</strong> ${company.displayName}</div>
+                            <div><strong>公司名称:</strong> ${company.name}</div>
+                            <div><strong>地址:</strong> ${company.address}</div>
+                        </div>
+                    `;
+                });
+                
+                output.innerHTML = html;
+                
+            } catch (error) {
+                output.innerHTML = '<p class="error">加载失败: ' + error.message + '</p>';
+            }
+        }
+        
+        async function fixCBELCompany() {
+            const output = document.getElementById('output');
+            
+            try {
+                // 首先验证密码
+                const password = prompt('请输入管理密码:');
+                const result = await cloudflareCompanyManager.verifyPassword(password);
+                
+                if (!result.success) {
+                    output.innerHTML += '<p class="error">密码错误！</p>';
+                    return;
+                }
+                
+                // 删除现有的CBEL公司（如果存在）
+                const companies = cloudflareCompanyManager.getCompanies();
+                let cbelKey = null;
+                
+                Object.keys(companies).forEach(key => {
+                    const company = companies[key];
+                    if (company.displayName === 'CBEL TWN' || company.displayName.includes('CBEL')) {
+                        cbelKey = key;
+                    }
+                });
+                
+                if (cbelKey && cbelKey !== 'default') {
+                    await cloudflareCompanyManager.deleteCompany(cbelKey);
+                    output.innerHTML += '<p class="success">已删除旧的CBEL公司数据</p>';
+                }
+                
+                // 添加正确的CBEL公司数据
+                const newCompanyData = {
+                    displayName: 'CBEL EXP',
+                    name: 'PGS (Taiwan) CBEL EXPRESS Co., Ltd.',
+                    address: '10F., No. 97, Sec. 1, Xintai 5th Rd., Xizhi Dist., New Taipei City 221, Taiwan (R.O.C.)'
+                };
+                
+                const addResult = await cloudflareCompanyManager.addCompany(newCompanyData);
+                
+                if (addResult.success) {
+                    output.innerHTML += '<p class="success">CBEL公司数据修复成功！</p>';
+                    await loadAndDisplayCompanies();
+                } else {
+                    output.innerHTML += '<p class="error">修复失败: ' + addResult.error + '</p>';
+                }
+                
+            } catch (error) {
+                output.innerHTML += '<p class="error">修复过程出错: ' + error.message + '</p>';
+            }
+        }
+        
+        async function addCorrectCBELCompany() {
+            const output = document.getElementById('output');
+            
+            try {
+                // 首先验证密码
+                const password = prompt('请输入管理密码:');
+                const result = await cloudflareCompanyManager.verifyPassword(password);
+                
+                if (!result.success) {
+                    output.innerHTML += '<p class="error">密码错误！</p>';
+                    return;
+                }
+                
+                // 添加正确的CBEL公司数据
+                const newCompanyData = {
+                    displayName: 'CBEL EXP',
+                    name: 'PGS (Taiwan) CBEL EXPRESS Co., Ltd.',
+                    address: '10F., No. 97, Sec. 1, Xintai 5th Rd., Xizhi Dist., New Taipei City 221, Taiwan (R.O.C.)'
+                };
+                
+                const addResult = await cloudflareCompanyManager.addCompany(newCompanyData);
+                
+                if (addResult.success) {
+                    output.innerHTML += '<p class="success">CBEL公司添加成功！</p>';
+                    await loadAndDisplayCompanies();
+                } else {
+                    output.innerHTML += '<p class="error">添加失败: ' + addResult.error + '</p>';
+                }
+                
+            } catch (error) {
+                output.innerHTML += '<p class="error">添加过程出错: ' + error.message + '</p>';
+            }
+        }
+        
+        // 页面加载时自动执行
+        window.onload = function() {
+            loadAndDisplayCompanies();
+        };
+    </script>
+</body>
+</html>

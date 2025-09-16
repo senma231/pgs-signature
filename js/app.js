@@ -300,8 +300,8 @@ function updatePreview() {
         // 显示提示信息
         previewArea.innerHTML = `
             <div class="text-center">
-                <p class="text-lg mb-2">请完善表单信息</p>
-                <p class="text-sm">选择公司并填写姓名、部门后即可预览签名</p>
+                <p class="text-lg mb-2">请完善表单信息 / Please complete the form</p>
+                <p class="text-sm">选择公司并填写姓名、部门后即可预览签名 / Select company and fill in name, department to preview signature</p>
             </div>
         `;
         previewArea.className = "signature-preview flex items-center justify-center text-gray-500 bg-gray-50";
@@ -505,7 +505,7 @@ function renderContactInfoWithDynamicSpacing(ctx, company, personalContacts, sta
 async function convertToImage() {
     const signatureElement = previewArea.querySelector('div[style*="background-image"]');
     if (!signatureElement) {
-        alert('Please generate a signature first');
+        alert('请先生成签名 / Please generate a signature first');
         return null;
     }
 
@@ -592,7 +592,7 @@ async function convertToImage() {
         });
     } catch (error) {
         console.error('Error converting to image:', error);
-        alert('Error generating image: ' + error.message);
+        alert('生成图片错误 / Error generating image: ' + error.message);
         return null;
     }
 }
@@ -620,7 +620,7 @@ async function initializeCompanySelect() {
 // 导出图片
 async function exportImageHandler() {
     if (!validateForm()) {
-        alert('请完善表单信息');
+        alert('请完善表单信息 / Please complete the form information');
         return;
     }
 
@@ -635,40 +635,40 @@ async function exportImageHandler() {
         }
     } catch (error) {
         console.error('Export error:', error);
-        alert('导出失败：' + error.message);
+        alert('导出失败 / Export failed: ' + error.message);
     }
 }
 
 // 复制图片到剪贴板（增强兼容性版本）
 async function copyImageHandler() {
     if (!validateForm()) {
-        alert('请完善表单信息');
+        alert('请完善表单信息 / Please complete the form information');
         return;
     }
 
     try {
         const canvas = await convertToImage();
         if (!canvas) {
-            alert('生成图片失败，请重试');
+            alert('生成图片失败，请重试 / Failed to generate image, please try again');
             return;
         }
 
         // 检查浏览器是否支持剪贴板API
         if (!navigator.clipboard || !navigator.clipboard.write) {
-            alert('您的浏览器不支持复制图片功能，请使用导出功能');
+            alert('您的浏览器不支持复制图片功能，请使用导出功能 / Your browser does not support copying images, please use export function');
             return;
         }
 
         // 检查是否在HTTPS环境或localhost
         if (location.protocol !== 'https:' && location.hostname !== 'localhost' && location.hostname !== '127.0.0.1') {
-            alert('复制图片功能需要HTTPS环境，请使用导出功能');
+            alert('复制图片功能需要HTTPS环境，请使用导出功能 / Copy image function requires HTTPS environment, please use export function');
             return;
         }
 
         // 首先尝试PNG格式（兼容性更好）
         canvas.toBlob(async (pngBlob) => {
             if (!pngBlob) {
-                alert('图片转换失败，请重试');
+                alert('图片转换失败，请重试 / Image conversion failed, please try again');
                 return;
             }
 
@@ -679,7 +679,7 @@ async function copyImageHandler() {
                 });
 
                 await navigator.clipboard.write([clipboardItem]);
-                alert('签名已复制到剪贴板（PNG格式）！');
+                alert('签名已复制到剪贴板（PNG格式）！/ Signature copied to clipboard (PNG format)!');
 
             } catch (pngError) {
                 console.error('PNG clipboard write error:', pngError);
@@ -698,7 +698,7 @@ async function copyImageHandler() {
                         });
 
                         await navigator.clipboard.write([jpgClipboardItem]);
-                        alert('签名已复制到剪贴板（JPG格式）！');
+                        alert('签名已复制到剪贴板（JPG格式）！/ Signature copied to clipboard (JPG format)!');
 
                     } catch (jpgError) {
                         console.error('JPG clipboard write error:', jpgError);
@@ -711,7 +711,7 @@ async function copyImageHandler() {
 
     } catch (error) {
         console.error('Copy error:', error);
-        alert('复制失败：' + error.message + '，请使用导出功能');
+        alert('复制失败 / Copy failed: ' + error.message + '，请使用导出功能 / Please use export function');
     }
 }
 
@@ -722,10 +722,10 @@ function downloadFallback(canvas) {
         link.download = `signature_${contactName.value.trim()}_${new Date().toISOString().split('T')[0]}.jpg`;
         link.href = canvas.toDataURL('image/jpeg', 0.9);
         link.click();
-        alert('复制到剪贴板失败，已自动下载图片文件');
+        alert('复制到剪贴板失败，已自动下载图片文件 / Failed to copy to clipboard, image file downloaded automatically');
     } catch (downloadError) {
         console.error('Download fallback error:', downloadError);
-        alert('复制和下载都失败，请使用导出功能');
+        alert('复制和下载都失败，请使用导出功能 / Both copy and download failed, please use export function');
     }
 }
 
@@ -751,10 +751,10 @@ async function openCompanyManagement() {
             renderCompanyList();
             companyModal.classList.remove('hidden');
         } else {
-            alert('密码错误！');
+            alert('密码错误！/ Incorrect password!');
         }
     } catch (error) {
-        alert('验证失败：' + error.message);
+        alert('验证失败 / Verification failed: ' + error.message);
     }
 }
 
@@ -797,7 +797,7 @@ async function addNewCompany() {
     const address = newCompanyAddress.value.trim();
 
     if (!displayName || !name || !address) {
-        alert('请填写完整的公司信息（显示名称、公司名称、公司地址都是必填项）');
+        alert('请填写完整的公司信息（显示名称、公司名称、公司地址都是必填项）/ Please fill in complete company information (display name, company name, and address are all required)');
         return;
     }
 
@@ -817,12 +817,12 @@ async function addNewCompany() {
             // 更新界面
             await initializeCompanySelect();
             renderCompanyList();
-            alert('公司添加成功！');
+            alert('公司添加成功！/ Company added successfully!');
         } else {
-            alert('添加失败：' + result.error);
+            alert('添加失败 / Add failed: ' + result.error);
         }
     } catch (error) {
-        alert('添加失败：' + error.message);
+        alert('添加失败 / Add failed: ' + error.message);
     }
 }
 
@@ -836,12 +836,12 @@ window.deleteCompany = async function(companyKey) {
                 await initializeCompanySelect();
                 renderCompanyList();
                 updatePreview();
-                alert('公司删除成功！');
+                alert('公司删除成功！/ Company deleted successfully!');
             } else {
-                alert('删除失败：' + result.error);
+                alert('删除失败 / Delete failed: ' + result.error);
             }
         } catch (error) {
-            alert('删除失败：' + error.message);
+            alert('删除失败 / Delete failed: ' + error.message);
         }
     }
 };
@@ -859,7 +859,7 @@ async function initializeApp() {
         console.log('应用初始化完成');
     } catch (error) {
         console.error('应用初始化失败:', error);
-        alert('应用初始化失败，请刷新页面重试');
+        alert('应用初始化失败，请刷新页面重试 / Application initialization failed, please refresh the page and try again');
     }
 }
 

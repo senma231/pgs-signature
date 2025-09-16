@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>公司数据调试</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .company { border: 1px solid #ccc; margin: 10px 0; padding: 10px; }
+        .company-key { font-weight: bold; color: #333; }
+        .company-name { color: #0066cc; }
+        .company-display { color: #009900; }
+        pre { background: #f5f5f5; padding: 10px; overflow-x: auto; }
+    </style>
+</head>
+<body>
+    <h1>公司数据调试工具</h1>
+    
+    <button onclick="loadAndDisplayCompanies()">加载公司数据</button>
+    <button onclick="clearCache()">清除缓存</button>
+    
+    <div id="output"></div>
+
+    <script src="./js/cloudflare-api.js"></script>
+    <script>
+        // 初始化管理器
+        const cloudflareCompanyManager = new CloudflareCompanyManager();
+        
+        async function loadAndDisplayCompanies() {
+            const output = document.getElementById('output');
+            output.innerHTML = '<p>正在加载数据...</p>';
+            
+            try {
+                // 加载公司数据
+                await cloudflareCompanyManager.loadCompanies();
+                const companies = cloudflareCompanyManager.getCompanies();
+                
+                let html = '<h2>公司数据列表</h2>';
+                
+                Object.keys(companies).forEach(key => {
+                    const company = companies[key];
+                    html += `
+                        <div class="company">
+                            <div class="company-key">Key: ${key}</div>
+                            <div class="company-display">显示名称: ${company.displayName}</div>
+                            <div class="company-name">公司名称: ${company.name}</div>
+                            <div>地址: ${company.address}</div>
+                            <div>是否默认: ${company.isDefault ? '是' : '否'}</div>
+                        </div>
+                    `;
+                });
+                
+                html += '<h3>原始JSON数据</h3>';
+                html += '<pre>' + JSON.stringify(companies, null, 2) + '</pre>';
+                
+                output.innerHTML = html;
+                
+            } catch (error) {
+                output.innerHTML = '<p style="color: red;">加载失败: ' + error.message + '</p>';
+                console.error('加载公司数据失败:', error);
+            }
+        }
+        
+        function clearCache() {
+            localStorage.removeItem('cloudflare_companies_cache');
+            localStorage.removeItem('electronic_signature_companies');
+            alert('缓存已清除');
+        }
+        
+        // 页面加载时自动执行
+        window.onload = function() {
+            loadAndDisplayCompanies();
+        };
+    </script>
+</body>
+</html>
