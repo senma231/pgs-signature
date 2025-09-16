@@ -95,7 +95,7 @@ function renderPersonalInfo(name, dept, company, scale = 1) {
         <div style="position: absolute; left: ${baseX}px; top: ${baseY}px; color: white; z-index: 2; line-height: 1.2;">
             <div style="font-weight: bold; font-size: ${42 * scale}px; margin-bottom: ${8 * scale}px; text-shadow: 1px 1px 2px rgba(0,0,0,0.5);">${name}</div>
             <div style="font-size: ${34 * scale}px; margin-bottom: ${8 * scale}px; text-shadow: 1px 1px 2px rgba(0,0,0,0.5);">${dept}</div>
-            <div style="font-weight: bold; font-size: ${38 * scale}px; margin-bottom: 0px; text-shadow: 1px 1px 2px rgba(0,0,0,0.5);">${company.name.split('(')[0].trim()}</div>
+            <div style="font-weight: bold; font-size: ${38 * scale}px; margin-bottom: 0px; text-shadow: 1px 1px 2px rgba(0,0,0,0.5);">${company.name}</div>
         </div>
     `;
 }
@@ -550,7 +550,7 @@ async function convertToImage() {
                 ctx.fillText(dept, 500, 100);
 
                 ctx.font = 'bold 36px Arial';
-                ctx.fillText(company.name.split('(')[0].trim(), 500, 155);
+                ctx.fillText(company.name, 500, 155);
 
                 // 联系信息区域（蓝色文字）- 使用动态行距的两列对齐布局
                 ctx.fillStyle = '#144E8C';
