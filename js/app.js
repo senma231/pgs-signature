@@ -743,6 +743,13 @@ const closeModal = document.getElementById('closeModal');
 const manageCompanies = document.getElementById('manageCompanies');
 const addCompany = document.getElementById('addCompany');
 const companyList = document.getElementById('companyList');
+const newCompanyDisplayName = document.getElementById('newCompanyDisplayName');
+const newCompanyName = document.getElementById('newCompanyName');
+const newCompanyAddress = document.getElementById('newCompanyAddress');
+const customWebsiteEnabled = document.getElementById('customWebsiteEnabled');
+const customWebsiteSection = document.getElementById('customWebsiteSection');
+const newCompanyWebsite = document.getElementById('newCompanyWebsite');
+const newCompanyGroupWebsite = document.getElementById('newCompanyGroupWebsite');
 
 // 自定义Website勾选框事件监听
 if (customWebsiteEnabled) {
@@ -757,13 +764,6 @@ if (customWebsiteEnabled) {
         }
     });
 }
-const newCompanyDisplayName = document.getElementById('newCompanyDisplayName');
-const newCompanyName = document.getElementById('newCompanyName');
-const newCompanyAddress = document.getElementById('newCompanyAddress');
-const customWebsiteEnabled = document.getElementById('customWebsiteEnabled');
-const customWebsiteSection = document.getElementById('customWebsiteSection');
-const newCompanyWebsite = document.getElementById('newCompanyWebsite');
-const newCompanyGroupWebsite = document.getElementById('newCompanyGroupWebsite');
 
 // 打开公司管理
 async function openCompanyManagement() {
