@@ -305,6 +305,28 @@
                                 <label class="block text-sm font-medium text-gray-700 mb-2">公司地址 / Company Address *</label>
                                 <textarea id="newCompanyAddress" rows="3" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="请输入公司地址 / Please enter company address"></textarea>
                             </div>
+
+                            <!-- 自定义Website选项 -->
+                            <div>
+                                <label class="flex items-center">
+                                    <input type="checkbox" id="customWebsiteEnabled" class="mr-2 rounded border-gray-300 text-blue-600 focus:ring-blue-500">
+                                    <span class="text-sm font-medium text-gray-700">自定义Website / Custom Website</span>
+                                </label>
+                                <p class="text-xs text-gray-500 mt-1">勾选后可为此公司设置专属的Website地址 / Check to set custom website for this company</p>
+                            </div>
+
+                            <!-- 自定义Website输入框（默认隐藏） -->
+                            <div id="customWebsiteSection" class="hidden space-y-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">Website *</label>
+                                    <input type="text" id="newCompanyWebsite" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="请输入Website地址 / Please enter website URL (e.g., www.example.com)">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">Group Website</label>
+                                    <input type="text" id="newCompanyGroupWebsite" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="请输入Group Website地址 / Please enter group website URL (optional)">
+                                    <p class="text-xs text-gray-500 mt-1">可选，默认为 www.francescoparisi.com / Optional, defaults to www.francescoparisi.com</p>
+                                </div>
+                            </div>
                             <div class="flex justify-end">
                                 <button id="addCompany" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors">
                                     添加公司 / Add Company
@@ -332,7 +354,7 @@
             export: 'public/back.png'    // 导出使用back.png
         };
     </script>
-    <script src="./js/cloudflare-api.js?v=20241216-bilingual"></script>
-    <script src="./js/app.js?v=20241216-bilingual"></script>
+    <script src="./js/cloudflare-api.js?v=20241216-custom-website"></script>
+    <script src="./js/app.js?v=20241216-custom-website"></script>
 </body>
 </html>

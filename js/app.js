@@ -170,9 +170,12 @@ function renderContactInfo(company, personalContacts, scale = 1) {
         allContactItems.push({ label: imContact.type, content: imContact.value });
     });
 
-    // 添加固定的网站信息
-    allContactItems.push({ label: 'Website', content: 'www.pgs-log.com' });
-    allContactItems.push({ label: 'Group', content: 'www.francescoparisi.com' });
+    // 添加网站信息（支持自定义）
+    const websiteUrl = (company.customWebsite && company.website) ? company.website : 'www.pgs-log.com';
+    const groupUrl = (company.customWebsite && company.groupWebsite) ? company.groupWebsite : 'www.francescoparisi.com';
+
+    allContactItems.push({ label: 'Website', content: websiteUrl });
+    allContactItems.push({ label: 'Group', content: groupUrl });
 
     // 计算动态行距
     const dynamicLineHeight = calculateDynamicSpacing(allContactItems.length);
@@ -461,9 +464,12 @@ function renderContactInfoWithDynamicSpacing(ctx, company, personalContacts, sta
         allContactItems.push({ label: imType2.value, content: imValue2.value.trim() });
     }
 
-    // 添加固定的网站信息
-    allContactItems.push({ label: 'Website', content: 'www.pgs-log.com' });
-    allContactItems.push({ label: 'Group', content: 'www.francescoparisi.com' });
+    // 添加网站信息（支持自定义）
+    const websiteUrl = (company.customWebsite && company.website) ? company.website : 'www.pgs-log.com';
+    const groupUrl = (company.customWebsite && company.groupWebsite) ? company.groupWebsite : 'www.francescoparisi.com';
+
+    allContactItems.push({ label: 'Website', content: websiteUrl });
+    allContactItems.push({ label: 'Group', content: groupUrl });
 
     // 计算动态行距和项目间距 - 修复：与HTML预览保持一致
     const dynamicLineHeightRatio = calculateDynamicSpacing(allContactItems.length, 365); // 传入可用高度
@@ -737,9 +743,27 @@ const closeModal = document.getElementById('closeModal');
 const manageCompanies = document.getElementById('manageCompanies');
 const addCompany = document.getElementById('addCompany');
 const companyList = document.getElementById('companyList');
+
+// 自定义Website勾选框事件监听
+if (customWebsiteEnabled) {
+    customWebsiteEnabled.addEventListener('change', function() {
+        if (this.checked) {
+            customWebsiteSection.classList.remove('hidden');
+        } else {
+            customWebsiteSection.classList.add('hidden');
+            // 清空输入框
+            newCompanyWebsite.value = '';
+            newCompanyGroupWebsite.value = '';
+        }
+    });
+}
 const newCompanyDisplayName = document.getElementById('newCompanyDisplayName');
 const newCompanyName = document.getElementById('newCompanyName');
 const newCompanyAddress = document.getElementById('newCompanyAddress');
+const customWebsiteEnabled = document.getElementById('customWebsiteEnabled');
+const customWebsiteSection = document.getElementById('customWebsiteSection');
+const newCompanyWebsite = document.getElementById('newCompanyWebsite');
+const newCompanyGroupWebsite = document.getElementById('newCompanyGroupWebsite');
 
 // 打开公司管理
 async function openCompanyManagement() {
@@ -776,7 +800,11 @@ function renderCompanyList() {
                         ${company.isDefault ? '<span class="px-2 py-1 text-xs bg-gray-200 text-gray-600 rounded">默认模板</span>' : '<span class="px-2 py-1 text-xs bg-blue-100 text-blue-600 rounded">自定义</span>'}
                     </div>
                     <p class="text-sm text-gray-600 mb-1"><strong>公司:</strong> ${company.name || '(空)'}</p>
-                    <p class="text-sm text-gray-600"><strong>地址:</strong> ${company.address || '(空)'}</p>
+                    <p class="text-sm text-gray-600 mb-1"><strong>地址:</strong> ${company.address || '(空)'}</p>
+                    ${company.customWebsite ? `
+                        <p class="text-sm text-blue-600 mb-1"><strong>Website:</strong> ${company.website}</p>
+                        <p class="text-sm text-blue-600"><strong>Group:</strong> ${company.groupWebsite}</p>
+                    ` : '<p class="text-sm text-gray-500">使用默认Website / Using default website</p>'}
                 </div>
                 ${!company.isDefault ? `
                     <button onclick="deleteCompany('${key}')" class="ml-4 px-3 py-1 bg-red-600 text-white text-sm rounded hover:bg-red-700 transition-colors">
@@ -795,24 +823,46 @@ async function addNewCompany() {
     const displayName = newCompanyDisplayName.value.trim();
     const name = newCompanyName.value.trim();
     const address = newCompanyAddress.value.trim();
+    const hasCustomWebsite = customWebsiteEnabled.checked;
+    const website = newCompanyWebsite.value.trim();
+    const groupWebsite = newCompanyGroupWebsite.value.trim();
 
     if (!displayName || !name || !address) {
         alert('请填写完整的公司信息（显示名称、公司名称、公司地址都是必填项）/ Please fill in complete company information (display name, company name, and address are all required)');
         return;
     }
 
+    // 如果勾选了自定义Website，则Website字段为必填
+    if (hasCustomWebsite && !website) {
+        alert('请输入Website地址 / Please enter website URL');
+        return;
+    }
+
     try {
-        const result = await cloudflareCompanyManager.addCompany({
+        const companyData = {
             displayName: displayName,
             name: name,
             address: address
-        });
+        };
+
+        // 如果勾选了自定义Website，添加website字段
+        if (hasCustomWebsite) {
+            companyData.customWebsite = true;
+            companyData.website = website;
+            companyData.groupWebsite = groupWebsite || 'www.francescoparisi.com'; // 默认值
+        }
+
+        const result = await cloudflareCompanyManager.addCompany(companyData);
 
         if (result.success) {
             // 清空表单
             newCompanyDisplayName.value = '';
             newCompanyName.value = '';
             newCompanyAddress.value = '';
+            newCompanyWebsite.value = '';
+            newCompanyGroupWebsite.value = '';
+            customWebsiteEnabled.checked = false;
+            customWebsiteSection.classList.add('hidden');
 
             // 更新界面
             await initializeCompanySelect();
