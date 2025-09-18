@@ -184,6 +184,16 @@ class CloudflareApiClient {
     }
 
     /**
+     * 更新公司信息
+     */
+    async updateCompany(companyId, companyData) {
+        return await this.request(`/companies/${companyId}`, {
+            method: 'PUT',
+            body: JSON.stringify(companyData)
+        });
+    }
+
+    /**
      * 删除公司
      */
     async deleteCompany(companyId) {
@@ -310,6 +320,27 @@ class CloudflareCompanyManager {
             return response;
         } catch (error) {
             console.error('添加公司失败:', error);
+            throw error;
+        }
+    }
+
+    /**
+     * 更新服务器上的公司信息
+     */
+    async updateCompany(companyId, companyData) {
+        try {
+            if (!this.isOnline) {
+                throw new Error('网络连接不可用，无法更新公司');
+            }
+
+            const response = await this.apiClient.updateCompany(companyId, companyData);
+
+            // 重新加载数据
+            await this.loadCompanies();
+
+            return response;
+        } catch (error) {
+            console.error('更新公司失败:', error);
             throw error;
         }
     }

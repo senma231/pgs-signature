@@ -742,6 +742,8 @@ const companyModal = document.getElementById('companyModal');
 const closeModal = document.getElementById('closeModal');
 const manageCompanies = document.getElementById('manageCompanies');
 const addCompany = document.getElementById('addCompany');
+const addCompanyText = document.getElementById('addCompanyText');
+const cancelEdit = document.getElementById('cancelEdit');
 const companyList = document.getElementById('companyList');
 const newCompanyDisplayName = document.getElementById('newCompanyDisplayName');
 const newCompanyName = document.getElementById('newCompanyName');
@@ -750,6 +752,10 @@ const customWebsiteEnabled = document.getElementById('customWebsiteEnabled');
 const customWebsiteSection = document.getElementById('customWebsiteSection');
 const newCompanyWebsite = document.getElementById('newCompanyWebsite');
 const newCompanyGroupWebsite = document.getElementById('newCompanyGroupWebsite');
+
+// 编辑状态管理
+let isEditMode = false;
+let editingCompanyId = null;
 
 // 自定义Website勾选框事件监听
 if (customWebsiteEnabled) {
@@ -763,6 +769,11 @@ if (customWebsiteEnabled) {
             newCompanyGroupWebsite.value = '';
         }
     });
+}
+
+// 取消编辑按钮事件监听
+if (cancelEdit) {
+    cancelEdit.addEventListener('click', exitEditMode);
 }
 
 // 打开公司管理
@@ -807,9 +818,14 @@ function renderCompanyList() {
                     ` : '<p class="text-sm text-gray-500">使用默认Website / Using default website</p>'}
                 </div>
                 ${!company.isDefault ? `
-                    <button onclick="deleteCompany('${key}')" class="ml-4 px-3 py-1 bg-red-600 text-white text-sm rounded hover:bg-red-700 transition-colors">
-                        删除
-                    </button>
+                    <div class="ml-4 flex gap-2">
+                        <button onclick="editCompany('${key}')" class="px-3 py-1 bg-green-600 text-white text-sm rounded hover:bg-green-700 transition-colors">
+                            编辑 / Edit
+                        </button>
+                        <button onclick="deleteCompany('${key}')" class="px-3 py-1 bg-red-600 text-white text-sm rounded hover:bg-red-700 transition-colors">
+                            删除 / Delete
+                        </button>
+                    </div>
                 ` : ''}
             </div>
         `;
@@ -818,7 +834,69 @@ function renderCompanyList() {
     });
 }
 
-// 添加新公司
+// 清空表单
+function clearForm() {
+    newCompanyDisplayName.value = '';
+    newCompanyName.value = '';
+    newCompanyAddress.value = '';
+    newCompanyWebsite.value = '';
+    newCompanyGroupWebsite.value = '';
+    customWebsiteEnabled.checked = false;
+    customWebsiteSection.classList.add('hidden');
+}
+
+// 进入编辑模式
+function enterEditMode(companyId, companyData) {
+    isEditMode = true;
+    editingCompanyId = companyId;
+
+    // 填充表单数据
+    newCompanyDisplayName.value = companyData.displayName || '';
+    newCompanyName.value = companyData.name || '';
+    newCompanyAddress.value = companyData.address || '';
+
+    // 处理自定义Website
+    if (companyData.customWebsite) {
+        customWebsiteEnabled.checked = true;
+        customWebsiteSection.classList.remove('hidden');
+        newCompanyWebsite.value = companyData.website || '';
+        newCompanyGroupWebsite.value = companyData.groupWebsite || '';
+    } else {
+        customWebsiteEnabled.checked = false;
+        customWebsiteSection.classList.add('hidden');
+        newCompanyWebsite.value = '';
+        newCompanyGroupWebsite.value = '';
+    }
+
+    // 更新UI
+    addCompanyText.textContent = '更新公司 / Update Company';
+    cancelEdit.classList.remove('hidden');
+}
+
+// 退出编辑模式
+function exitEditMode() {
+    isEditMode = false;
+    editingCompanyId = null;
+
+    // 清空表单
+    clearForm();
+
+    // 更新UI
+    addCompanyText.textContent = '添加公司 / Add Company';
+    cancelEdit.classList.add('hidden');
+}
+
+// 编辑公司
+function editCompany(companyId) {
+    const companies = cloudflareCompanyManager.getCompanies();
+    const company = companies[companyId];
+
+    if (company) {
+        enterEditMode(companyId, company);
+    }
+}
+
+// 添加新公司或更新公司
 async function addNewCompany() {
     const displayName = newCompanyDisplayName.value.trim();
     const name = newCompanyName.value.trim();
@@ -852,24 +930,35 @@ async function addNewCompany() {
             companyData.groupWebsite = groupWebsite || 'www.francescoparisi.com'; // 默认值
         }
 
-        const result = await cloudflareCompanyManager.addCompany(companyData);
+        let result;
+        const wasEditMode = isEditMode; // 保存当前状态，因为exitEditMode会重置它
+
+        if (isEditMode) {
+            // 编辑模式：更新公司
+            result = await cloudflareCompanyManager.updateCompany(editingCompanyId, companyData);
+        } else {
+            // 新增模式：添加公司
+            result = await cloudflareCompanyManager.addCompany(companyData);
+        }
 
         if (result.success) {
-            // 清空表单
-            newCompanyDisplayName.value = '';
-            newCompanyName.value = '';
-            newCompanyAddress.value = '';
-            newCompanyWebsite.value = '';
-            newCompanyGroupWebsite.value = '';
-            customWebsiteEnabled.checked = false;
-            customWebsiteSection.classList.add('hidden');
+            // 清空表单并退出编辑模式
+            clearForm();
+            exitEditMode();
 
             // 更新界面
             await initializeCompanySelect();
             renderCompanyList();
-            alert('公司添加成功！/ Company added successfully!');
+
+            const successMessage = wasEditMode ?
+                '公司更新成功！/ Company updated successfully!' :
+                '公司添加成功！/ Company added successfully!';
+            alert(successMessage);
         } else {
-            alert('添加失败 / Add failed: ' + result.error);
+            const errorMessage = wasEditMode ?
+                '更新失败 / Update failed: ' + result.error :
+                '添加失败 / Add failed: ' + result.error;
+            alert(errorMessage);
         }
     } catch (error) {
         alert('添加失败 / Add failed: ' + error.message);

@@ -327,9 +327,12 @@
                                     <p class="text-xs text-gray-500 mt-1">可选，默认为 www.francescoparisi.com / Optional, defaults to www.francescoparisi.com</p>
                                 </div>
                             </div>
-                            <div class="flex justify-end">
+                            <div class="flex justify-between items-center">
                                 <button id="addCompany" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors">
-                                    添加公司 / Add Company
+                                    <span id="addCompanyText">添加公司 / Add Company</span>
+                                </button>
+                                <button id="cancelEdit" class="px-4 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600 transition-colors hidden">
+                                    取消编辑 / Cancel Edit
                                 </button>
                             </div>
                         </div>
@@ -354,7 +357,7 @@
             export: 'public/back.png'    // 导出使用back.png
         };
     </script>
-    <script src="./js/cloudflare-api.js?v=20241216-custom-website"></script>
-    <script src="./js/app.js?v=20241216-custom-website"></script>
+    <script src="./js/cloudflare-api.js?v=20241216-edit-company"></script>
+    <script src="./js/app.js?v=20241216-edit-company"></script>
 </body>
 </html>
