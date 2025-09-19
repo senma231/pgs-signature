@@ -104,6 +104,9 @@ archive/
 # Cloudflare Workers API code (keep in repo for deployment)
 # cloudflare-worker.js
 
+# Agent configuration (only for CNB platform)
+Agent.md
+
 # Development and testing files
 debug-*.html
 test-*.html
