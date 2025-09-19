@@ -1,92 +1,108 @@
-# 🎯 电子签名生成器 - 纯前端版本
+# 🎯 PGS电子签名生成器
+
+一个专为Parisi Grand Smooth Logistics设计的企业级电子签名生成系统，支持多分公司管理和自定义Website功能。
 
 ## 📋 系统特点
 
-### ✅ 超级简单
-- **零配置** - 上传文件即可使用
-- **零依赖** - 不需要Python、数据库、服务器配置
-- **零维护** - 不需要管理后端服务
-- **即开即用** - 打开网页就能用
+### ✨ 企业级功能
+- **多分公司支持** - 管理23+家分公司信息
+- **自定义Website** - 支持分公司专属Website设置
+- **云端同步** - 基于Cloudflare Workers的数据持久化
+- **编辑功能** - 完整的CRUD操作（新增、编辑、删除）
+- **中英文界面** - 完整的双语支持
 
-### ✅ 功能完整
-- 电子签名生成和预览
-- 公司信息管理 (存储在浏览器本地)
-- PNG图片导出
-- 图片复制到剪贴板
-- 密码保护的管理功能
-- 响应式设计，支持手机访问
+### ✅ 技术特色
+- **混合架构** - 前端 + Cloudflare Workers API
+- **实时预览** - 所见即所得的签名预览
+- **高质量导出** - 1600×580像素PNG导出
+- **响应式设计** - 支持桌面和移动设备
+- **离线兼容** - 网络异常时使用本地缓存
 
-### ✅ 数据安全
-- 数据存储在用户浏览器本地 (localStorage)
-- 不会上传到任何服务器
-- 用户完全控制自己的数据
-- 支持数据导出和备份
+### 🔒 数据安全
+- **云端存储** - Cloudflare KV安全存储
+- **本地缓存** - 浏览器localStorage备份
+- **密码保护** - 管理功能密码保护
+- **数据导出** - 支持完整数据备份
 
-## 🚀 5分钟部署指南
+## 🚀 部署指南
 
-### 方法一：宝塔面板 (推荐)
+### 前端部署
 
-1. **创建网站**
-   - 登录宝塔面板
-   - 点击"网站" → "添加站点"
-   - 域名: `your-domain.com`
-   - PHP版本: **纯静态**
-
-2. **上传文件**
-   - 将 `simple-version` 文件夹中的所有文件上传到网站根目录
-   - 确保文件结构如下:
+#### 方法一：GitHub Pages (推荐)
+1. **Fork或Clone仓库**
+   ```bash
+   git clone https://github.com/senma231/pgs-signature.git
+   cd pgs-signature
    ```
-   /www/wwwroot/your-domain.com/
+
+2. **配置GitHub Pages**
+   - 在GitHub仓库设置中开启Pages
+   - 选择源分支为 `main`
+   - 访问 `https://username.github.io/pgs-signature`
+
+#### 方法二：Vercel/Netlify
+1. 连接GitHub仓库到Vercel或Netlify
+2. 自动部署，无需额外配置
+3. 获得自定义域名
+
+#### 方法三：自有服务器
+1. **上传文件**
+   ```bash
+   # 上传核心文件到网站根目录
    ├── index.html
    ├── js/
    ├── css/
-   └── images/
+   ├── images/
+   └── cloudflare-worker.js (API代码)
    ```
 
-3. **完成！**
-   - 直接访问 `https://your-domain.com` 即可使用
+2. **配置Web服务器**
+   - 支持静态文件服务
+   - 建议启用HTTPS
 
-### 方法二：虚拟主机
+### 后端API部署 (Cloudflare Workers)
 
-1. **FTP上传**
-   - 使用FTP客户端连接虚拟主机
-   - 上传所有文件到网站根目录
+1. **创建Cloudflare Workers**
+   - 登录 [Cloudflare Dashboard](https://dash.cloudflare.com)
+   - 进入 Workers & Pages
+   - 创建新的Worker
 
-2. **完成！**
-   - 访问域名即可使用
+2. **配置KV存储**
+   - 创建KV命名空间：`COMPANIES_KV`
+   - 在Worker设置中绑定KV命名空间
 
-### 方法三：免费托管平台
+3. **部署API代码**
+   - 复制 `cloudflare-worker.js` 中的代码
+   - 粘贴到Worker编辑器
+   - 保存并部署
 
-#### GitHub Pages
-1. 创建GitHub仓库
-2. 上传所有文件
-3. 开启GitHub Pages
-4. 访问 `https://username.github.io/repo-name`
+4. **配置前端API地址**
+   - 在 `index.html` 中添加：
+   ```html
+   <meta name="api-url" content="https://your-worker.workers.dev/api">
+   ```
 
-#### Vercel
-1. 访问 [vercel.com](https://vercel.com)
-2. 拖拽 `simple-version` 文件夹
-3. 自动部署完成
-
-#### Netlify
-1. 访问 [netlify.com](https://netlify.com)
-2. 拖拽 `simple-version` 文件夹
-3. 自动部署完成
-
-## 📁 文件结构
+## 📁 项目结构
 
 ```
-simple-version/
-├── index.html              # 主页面文件
+pgs-signature/
+├── index.html                 # 主应用页面
+├── cloudflare-worker.js       # Cloudflare Workers API代码
 ├── js/
-│   ├── app.js             # 核心应用逻辑
-│   └── storage.js         # 本地存储管理
+│   ├── app.js                # 核心应用逻辑
+│   ├── cloudflare-api.js     # API客户端
+│   └── storage.js            # 本地存储管理
 ├── css/
-│   └── style.css          # 样式文件
+│   └── style.css             # 样式文件
 ├── images/
-│   ├── back.png           # 签名背景图
-│   └── logo.png           # 公司Logo
-└── README.md              # 说明文档
+│   ├── back.png              # 签名背景图
+│   ├── logo.png              # 公司Logo
+│   └── preview.png           # 预览图片
+├── archive/                   # 存档文件 (不上传到Git)
+│   ├── deploy/               # 部署相关文件
+│   └── public/               # 公共资源备份
+├── README.md                  # 项目说明
+└── DEPLOYMENT.md              # 部署指南
 ```
 
 ## 🎯 使用说明
