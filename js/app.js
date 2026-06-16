@@ -1063,7 +1063,7 @@ async function initializeAccessGate() {
 
         const originalText = accessPasswordSubmit.textContent;
         accessPasswordSubmit.disabled = true;
-        accessPasswordSubmit.textContent = '验证中...';
+        accessPasswordSubmit.textContent = '验证中... / Verifying...';
 
         try {
             const result = await cloudflareCompanyManager.verifyAccessPassword(password);
