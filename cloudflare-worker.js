@@ -16,6 +16,7 @@ const ADMIN_PASSWORD = 'Sz@pgsit';
 
 // KV存储键名
 const COMPANIES_KEY = 'companies_data';
+const ACCESS_PASSWORD_KEY = 'site_access_password';
 
 // 默认公司数据
 const DEFAULT_COMPANIES = {
@@ -107,6 +108,19 @@ async function saveCompaniesToKV(companies) {
   } catch (error) {
       console.error('保存公司数据失败:', error);
       return false;
+  }
+}
+
+/**
+* 从KV存储获取页面访问密码
+*/
+async function getAccessPasswordFromKV() {
+  try {
+      const password = await COMPANIES_KV.get(ACCESS_PASSWORD_KEY);
+      return password ? password.trim() : ADMIN_PASSWORD;
+  } catch (error) {
+      console.error('获取页面访问密码失败:', error);
+      return ADMIN_PASSWORD;
   }
 }
 
@@ -352,6 +366,32 @@ async function handleVerifyPassword(request) {
 }
 
 /**
+* 验证页面访问密码
+*/
+async function handleVerifyAccessPassword(request) {
+  try {
+      const body = await request.json();
+      const { password } = body;
+
+      if (!password) {
+          return errorResponse('访问密码不能为空');
+      }
+
+      const accessPassword = await getAccessPasswordFromKV();
+      const isValid = password === accessPassword;
+
+      return jsonResponse({
+          success: isValid,
+          message: isValid ? '访问密码验证成功' : '访问密码错误',
+          timestamp: new Date().toISOString()
+      });
+
+  } catch (error) {
+      return errorResponse(`访问密码验证失败: ${error.message}`, 500);
+  }
+}
+
+/**
 * 导出数据
 */
 async function handleExportData(request) {
@@ -438,6 +478,11 @@ async function handleRequest(request) {
           // 密码验证
           if (pathname === '/api/verify-password' && method === 'POST') {
               return await handleVerifyPassword(request);
+          }
+
+          // 页面访问密码验证
+          if (pathname === '/api/verify-access-password' && method === 'POST') {
+              return await handleVerifyAccessPassword(request);
           }
           
           // 数据导出

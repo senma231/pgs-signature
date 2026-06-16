@@ -213,6 +213,16 @@ class CloudflareApiClient {
     }
 
     /**
+     * 验证页面访问密码
+     */
+    async verifyAccessPassword(password) {
+        return await this.request('/verify-access-password', {
+            method: 'POST',
+            body: JSON.stringify({ password })
+        });
+    }
+
+    /**
      * 导出数据
      */
     async exportData(password) {
@@ -382,6 +392,17 @@ class CloudflareCompanyManager {
             // 降级到本地验证
             return { success: password === 'Sz@pgsit' };
         }
+    }
+
+    /**
+     * 验证页面访问密码
+     */
+    async verifyAccessPassword(password) {
+        if (!this.isOnline) {
+            throw new Error('网络连接不可用，无法验证访问密码');
+        }
+
+        return await this.apiClient.verifyAccessPassword(password);
     }
 
     /**

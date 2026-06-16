@@ -1002,6 +1002,90 @@ async function initializeApp() {
     }
 }
 
+// 页面访问密码验证
+function unlockAccessGate() {
+    sessionStorage.setItem('pgs_signature_access_granted', 'true');
+    document.body.classList.remove('access-locked');
+
+    const accessGate = document.getElementById('accessGate');
+    if (accessGate) {
+        accessGate.classList.add('hidden');
+    }
+}
+
+function showAccessError(message) {
+    const errorElement = document.getElementById('accessPasswordError');
+    if (errorElement) {
+        errorElement.textContent = message;
+        errorElement.classList.remove('hidden');
+    }
+}
+
+function clearAccessError() {
+    const errorElement = document.getElementById('accessPasswordError');
+    if (errorElement) {
+        errorElement.textContent = '';
+        errorElement.classList.add('hidden');
+    }
+}
+
+async function initializeAccessGate() {
+    const accessGate = document.getElementById('accessGate');
+    const accessPasswordForm = document.getElementById('accessPasswordForm');
+    const accessPasswordInput = document.getElementById('accessPasswordInput');
+    const accessPasswordSubmit = document.getElementById('accessPasswordSubmit');
+
+    if (sessionStorage.getItem('pgs_signature_access_granted') === 'true') {
+        unlockAccessGate();
+        await initializeApp();
+        return;
+    }
+
+    if (!accessGate || !accessPasswordForm || !accessPasswordInput || !accessPasswordSubmit) {
+        console.error('访问验证组件缺失');
+        return;
+    }
+
+    accessGate.classList.remove('hidden');
+    document.body.classList.add('access-locked');
+    accessPasswordInput.focus();
+
+    accessPasswordForm.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        clearAccessError();
+
+        const password = accessPasswordInput.value;
+        if (!password) {
+            showAccessError('请输入访问密码 / Please enter the access password');
+            accessPasswordInput.focus();
+            return;
+        }
+
+        const originalText = accessPasswordSubmit.textContent;
+        accessPasswordSubmit.disabled = true;
+        accessPasswordSubmit.textContent = '验证中...';
+
+        try {
+            const result = await cloudflareCompanyManager.verifyAccessPassword(password);
+
+            if (result.success) {
+                accessPasswordInput.value = '';
+                unlockAccessGate();
+                await initializeApp();
+            } else {
+                showAccessError('访问密码错误 / Incorrect access password');
+                accessPasswordInput.select();
+            }
+        } catch (error) {
+            console.error('访问密码验证失败:', error);
+            showAccessError('验证失败，请检查网络后重试 / Verification failed, please check the network and try again');
+        } finally {
+            accessPasswordSubmit.disabled = false;
+            accessPasswordSubmit.textContent = originalText;
+        }
+    });
+}
+
 
 
 // 事件监听器
@@ -1034,6 +1118,6 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    // 初始化应用
-    initializeApp();
+    // 验证访问密码后初始化应用
+    initializeAccessGate();
 });
