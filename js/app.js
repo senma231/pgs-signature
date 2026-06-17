@@ -269,7 +269,7 @@ function renderOfficeInfo(scale = 1) {
 
     return `
         <div style="position: absolute; left: ${baseX}px; top: ${baseY}px; color: white; z-index: 2; white-space: nowrap;">
-            <div style="font-size: ${20 * scale}px; text-shadow: 1px 1px 2px rgba(0,0,0,0.5);">Office in China, India, Malaysia, Singapore, South Korea, Thailand, Vietnam, Japan, Indonesia</div>
+            <div style="font-size: ${20 * scale}px; text-shadow: 1px 1px 2px rgba(0,0,0,0.5);">Office in China, India, Malaysia, Singapore, South Korea, Thailand, Vietnam, Japan, Indonesia, Philippines</div>
         </div>
     `;
 }
@@ -582,7 +582,7 @@ async function convertToImage() {
                 // 添加底部办公地点信息（白色文字）
                 ctx.fillStyle = 'white';
                 ctx.font = '25px Arial';
-                ctx.fillText('Office in China, India, Malaysia, Singapore, South Korea, Thailand, Vietnam, Japan, Indonesia',
+                ctx.fillText('Office in China, India, Malaysia, Singapore, South Korea, Thailand, Vietnam, Japan, Indonesia, Philippines',
                            430, 565);
 
                 resolve(canvas);
