@@ -32,6 +32,11 @@ const CONTACT_LABEL_GAP = 25;
 const CONTACT_RIGHT_PADDING = 50;
 const CONTACT_CONTENT_MAX_WIDTH = SIGNATURE_WIDTH - CONTACT_START_X - CONTACT_LABEL_WIDTH - CONTACT_LABEL_GAP - CONTACT_RIGHT_PADDING;
 const CONTACT_CONTENT_MAX_CHARS = 64;
+const OFFICE_TEXT = 'Office in China, India, Malaysia, Singapore, South Korea, Thailand, Vietnam, Japan, Indonesia, Philippines';
+const OFFICE_START_X = 430;
+const OFFICE_Y = 565;
+const OFFICE_RIGHT_PADDING = 35;
+const OFFICE_MAX_WIDTH = SIGNATURE_WIDTH - OFFICE_START_X - OFFICE_RIGHT_PADDING;
 
 // 更新状态显示
 function updateStatus() {
@@ -317,12 +322,13 @@ function wrapTextForHTML(text, maxCharsPerLine) {
 
 // 办公地点信息区域渲染函数 - 使用精确像素定位
 function renderOfficeInfo(scale = 1) {
-    const baseX = 420 * scale;
+    const baseX = OFFICE_START_X * scale;
     const baseY = 540 * scale;
+    const maxWidth = OFFICE_MAX_WIDTH * scale;
 
     return `
-        <div style="position: absolute; left: ${baseX}px; top: ${baseY}px; color: white; z-index: 2; white-space: nowrap;">
-            <div style="font-size: ${20 * scale}px; text-shadow: 1px 1px 2px rgba(0,0,0,0.5);">Office in China, India, Malaysia, Singapore, South Korea, Thailand, Vietnam, Japan, Indonesia, Philippines</div>
+        <div style="position: absolute; left: ${baseX}px; top: ${baseY}px; width: ${maxWidth}px; color: white; z-index: 2; white-space: nowrap;">
+            <div style="font-size: ${19 * scale}px; text-shadow: 1px 1px 2px rgba(0,0,0,0.5);">${OFFICE_TEXT}</div>
         </div>
     `;
 }
@@ -528,6 +534,19 @@ function drawAlignedContactItem(ctx, label, content, x, y, labelWidth, maxConten
     return currentY; // 返回下一行的Y位置
 }
 
+function drawFittedText(ctx, text, x, y, maxWidth, maxFontSize, minFontSize, fontFamily = 'Arial') {
+    let fontSize = maxFontSize;
+    ctx.font = `${fontSize}px ${fontFamily}`;
+
+    while (fontSize > minFontSize && ctx.measureText(text).width > maxWidth) {
+        fontSize -= 1;
+        ctx.font = `${fontSize}px ${fontFamily}`;
+    }
+
+    ctx.fillText(text, x, y);
+    return fontSize;
+}
+
 // Canvas动态行距渲染函数
 function renderContactInfoWithDynamicSpacing(ctx, company, personalContacts, startX, startY, labelWidth, maxContentWidth, baseLineHeight) {
     // 收集所有要显示的联系信息项目
@@ -683,9 +702,7 @@ async function convertToImage() {
 
                 // 添加底部办公地点信息（白色文字）
                 ctx.fillStyle = 'white';
-                ctx.font = '25px Arial';
-                ctx.fillText('Office in China, India, Malaysia, Singapore, South Korea, Thailand, Vietnam, Japan, Indonesia, Philippines',
-                           430, 565);
+                drawFittedText(ctx, OFFICE_TEXT, OFFICE_START_X, OFFICE_Y, OFFICE_MAX_WIDTH, 25, 18);
 
                 resolve(canvas);
             };
