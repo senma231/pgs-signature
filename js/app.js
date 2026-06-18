@@ -7,6 +7,8 @@ const customCompanySection = document.getElementById('customCompanySection');
 const customCompanyName = document.getElementById('customCompanyName');
 const customCompanyAddress = document.getElementById('customCompanyAddress');
 const contactName = document.getElementById('contactName');
+const contactNameLabel = document.getElementById('contactNameLabel');
+const publicMailboxMode = document.getElementById('publicMailboxMode');
 const department = document.getElementById('department');
 const tel = document.getElementById('tel');
 const fax = document.getElementById('fax');
@@ -24,6 +26,8 @@ const copyImage = document.getElementById('copyImage');
 
 // 更新状态显示
 function updateStatus() {
+    updateContactNameMode();
+
     // 显示/隐藏自定义公司输入框
     if (companySelect.value === 'default') {
         customCompanySection.classList.remove('hidden');
@@ -32,6 +36,27 @@ function updateStatus() {
     }
 
     updatePreview();
+}
+
+function isPublicMailboxMode() {
+    return Boolean(publicMailboxMode && publicMailboxMode.checked);
+}
+
+function updateContactNameMode() {
+    if (!contactName || !contactNameLabel) {
+        return;
+    }
+
+    if (isPublicMailboxMode()) {
+        contactName.disabled = true;
+        contactName.classList.add('bg-gray-100', 'text-gray-500');
+        contactNameLabel.classList.remove('required-field');
+        document.getElementById('name-error').classList.add('hidden');
+    } else {
+        contactName.disabled = false;
+        contactName.classList.remove('bg-gray-100', 'text-gray-500');
+        contactNameLabel.classList.add('required-field');
+    }
 }
 
 // 表单验证
@@ -68,7 +93,7 @@ function validateForm() {
     }
 
     // 验证姓名
-    if (!contactName.value.trim()) {
+    if (!isPublicMailboxMode() && !contactName.value.trim()) {
         document.getElementById('name-error').classList.remove('hidden');
         isValid = false;
     } else {
@@ -89,11 +114,15 @@ function validateForm() {
 // 个人信息区域渲染函数 - 使用精确像素定位
 function renderPersonalInfo(name, dept, company, scale = 1) {
     const baseX = 500 * scale; // 基础X位置
-    const baseY = 10 * scale; // 基础Y位置
+    const hasName = Boolean(name);
+    const baseY = (hasName ? 10 : 45) * scale; // 基础Y位置
+    const nameLine = hasName
+        ? `<div style="font-weight: bold; font-size: ${42 * scale}px; margin-bottom: ${8 * scale}px; text-shadow: 1px 1px 2px rgba(0,0,0,0.5);">${name}</div>`
+        : '';
 
     return `
         <div style="position: absolute; left: ${baseX}px; top: ${baseY}px; color: white; z-index: 2; line-height: 1.2;">
-            <div style="font-weight: bold; font-size: ${42 * scale}px; margin-bottom: ${8 * scale}px; text-shadow: 1px 1px 2px rgba(0,0,0,0.5);">${name}</div>
+            ${nameLine}
             <div style="font-size: ${34 * scale}px; margin-bottom: ${8 * scale}px; text-shadow: 1px 1px 2px rgba(0,0,0,0.5);">${dept}</div>
             <div style="font-weight: bold; font-size: ${38 * scale}px; margin-bottom: 0px; text-shadow: 1px 1px 2px rgba(0,0,0,0.5);">${company.name}</div>
         </div>
@@ -287,7 +316,7 @@ function getBackgroundImage(isPreview = true) {
 function updatePreview() {
     const companies = cloudflareCompanyManager.getCompanies();
     let company = companies[companySelect.value];
-    const name = contactName.value.trim();
+    const name = isPublicMailboxMode() ? '' : contactName.value.trim();
     const dept = department.value.trim();
 
     // 如果是Default模板，使用自定义公司信息
@@ -299,12 +328,12 @@ function updatePreview() {
         };
     }
 
-    if (!company || !name || !dept || (company.isDefault && (!company.name || !company.address))) {
+    if (!company || (!isPublicMailboxMode() && !name) || !dept || (company.isDefault && (!company.name || !company.address))) {
         // 显示提示信息
         previewArea.innerHTML = `
             <div class="text-center">
                 <p class="text-lg mb-2">请完善表单信息 / Please complete the form</p>
-                <p class="text-sm">选择公司并填写姓名、部门后即可预览签名 / Select company and fill in name, department to preview signature</p>
+                <p class="text-sm">选择公司并填写必填信息后即可预览签名 / Select company and fill in required information to preview signature</p>
             </div>
         `;
         previewArea.className = "signature-preview flex items-center justify-center text-gray-500 bg-gray-50";
@@ -543,20 +572,28 @@ async function convertToImage() {
                     };
                 }
 
-                const name = contactName.value.trim();
+                const name = isPublicMailboxMode() ? '' : contactName.value.trim();
                 const dept = department.value.trim();
 
                 // 根据您的截图精确定位 - 使用原图尺寸的像素位置
                 // 个人信息区域（白色文字）
                 ctx.fillStyle = 'white';
-                ctx.font = 'bold 50px Arial'; // 原图尺寸需要更大字体
-                ctx.fillText(name, 500, 50); // 调整Y位置
+                let deptY = 100;
+                let companyY = 155;
+
+                if (name) {
+                    ctx.font = 'bold 50px Arial'; // 原图尺寸需要更大字体
+                    ctx.fillText(name, 500, 50); // 调整Y位置
+                } else {
+                    deptY = 70;
+                    companyY = 125;
+                }
 
                 ctx.font = '34px Arial';
-                ctx.fillText(dept, 500, 100);
+                ctx.fillText(dept, 500, deptY);
 
                 ctx.font = 'bold 36px Arial';
-                ctx.fillText(company.name, 500, 155);
+                ctx.fillText(company.name, 500, companyY);
 
                 // 联系信息区域（蓝色文字）- 使用动态行距的两列对齐布局
                 ctx.fillStyle = '#144E8C';
@@ -623,6 +660,13 @@ async function initializeCompanySelect() {
     });
 }
 
+function getSignatureFileBaseName() {
+    const contactNameBase = isPublicMailboxMode() ? '' : contactName.value.trim();
+    const emailBase = email.value.trim().split('@')[0];
+    const baseName = contactNameBase || emailBase || 'public_mailbox';
+    return baseName.replace(/[\\/:*?"<>|]+/g, '_') || 'public_mailbox';
+}
+
 // 导出图片
 async function exportImageHandler() {
     if (!validateForm()) {
@@ -635,7 +679,7 @@ async function exportImageHandler() {
         if (canvas) {
             // 创建下载链接
             const link = document.createElement('a');
-            link.download = `signature_${contactName.value.trim()}_${new Date().toISOString().split('T')[0]}.png`;
+            link.download = `signature_${getSignatureFileBaseName()}_${new Date().toISOString().split('T')[0]}.png`;
             link.href = canvas.toDataURL('image/png');
             link.click();
         }
@@ -725,7 +769,7 @@ async function copyImageHandler() {
 function downloadFallback(canvas) {
     try {
         const link = document.createElement('a');
-        link.download = `signature_${contactName.value.trim()}_${new Date().toISOString().split('T')[0]}.jpg`;
+        link.download = `signature_${getSignatureFileBaseName()}_${new Date().toISOString().split('T')[0]}.jpg`;
         link.href = canvas.toDataURL('image/jpeg', 0.9);
         link.click();
         alert('复制到剪贴板失败，已自动下载图片文件 / Failed to copy to clipboard, image file downloaded automatically');
@@ -1091,7 +1135,7 @@ async function initializeAccessGate() {
 // 事件监听器
 document.addEventListener('DOMContentLoaded', function() {
     // 表单变化监听
-    [companySelect, customCompanyName, customCompanyAddress, contactName, department, tel, fax, mobile, email, imType1, imValue1, imType2, imValue2].forEach(element => {
+    [companySelect, customCompanyName, customCompanyAddress, contactName, publicMailboxMode, department, tel, fax, mobile, email, imType1, imValue1, imType2, imValue2].filter(Boolean).forEach(element => {
         element.addEventListener('input', function() {
             updateStatus();
             enableButtons();
