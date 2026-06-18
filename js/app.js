@@ -24,6 +24,15 @@ const previewArea = document.getElementById('previewArea');
 const exportImage = document.getElementById('exportImage');
 const copyImage = document.getElementById('copyImage');
 
+const SIGNATURE_WIDTH = 1600;
+const SIGNATURE_HEIGHT = 580;
+const CONTACT_START_X = 500;
+const CONTACT_LABEL_WIDTH = 140;
+const CONTACT_LABEL_GAP = 25;
+const CONTACT_RIGHT_PADDING = 50;
+const CONTACT_CONTENT_MAX_WIDTH = SIGNATURE_WIDTH - CONTACT_START_X - CONTACT_LABEL_WIDTH - CONTACT_LABEL_GAP - CONTACT_RIGHT_PADDING;
+const CONTACT_CONTENT_MAX_CHARS = 64;
+
 // 更新状态显示
 function updateStatus() {
     updateContactNameMode();
@@ -162,9 +171,10 @@ function calculateDynamicSpacing(totalItems, availableHeight = 365, baseLineHeig
 // 联系信息区域渲染函数 - 使用动态行距的两列对齐布局
 function renderContactInfo(company, personalContacts, scale = 1) {
     const contactItems = [];
-    const labelWidth = 140 * scale; // 标签列宽度（增加到140以容纳E-mail等较长标签）
-    const contentStartX = 160 * scale; // 内容列起始位置
-    const maxContentWidth = Math.floor(90 / scale); // 内容列最大字符数（增加以匹配Canvas效果）
+    const labelWidth = CONTACT_LABEL_WIDTH * scale; // 标签列宽度（增加到140以容纳E-mail等较长标签）
+    const labelGap = CONTACT_LABEL_GAP * scale;
+    const maxContentPixelWidth = CONTACT_CONTENT_MAX_WIDTH * scale;
+    const maxContentWidth = Math.floor(CONTACT_CONTENT_MAX_CHARS / scale);
 
     // 收集所有要显示的联系信息项目
     const allContactItems = [];
@@ -229,18 +239,18 @@ function renderContactInfo(company, personalContacts, scale = 1) {
                 // 第一行：显示标签和内容，都靠左对齐
                 itemHTML += `
                     <div style="display: flex; margin-bottom: ${lineMarginBottom}px; line-height: ${dynamicLineHeight};">
-                        <div style="width: ${labelWidth}px; text-align: left; padding-right: 25px; flex-shrink: 0;">
+                        <div style="width: ${labelWidth}px; text-align: left; padding-right: ${labelGap}px; flex-shrink: 0;">
                             <strong>${label}:</strong>
                         </div>
-                        <div style="flex: 1; text-align: left;">${line}</div>
+                        <div style="width: ${maxContentPixelWidth}px; flex: 0 0 ${maxContentPixelWidth}px; text-align: left; overflow-wrap: anywhere; word-break: break-word;">${line}</div>
                     </div>
                 `;
             } else {
                 // 续行：只显示内容，与第一行内容对齐，内容靠左对齐
                 itemHTML += `
                     <div style="display: flex; margin-bottom: ${lineMarginBottom}px; line-height: ${dynamicLineHeight};">
-                        <div style="width: ${labelWidth}px; padding-right: 25px; flex-shrink: 0;"></div>
-                        <div style="flex: 1; text-align: left;">${line}</div>
+                        <div style="width: ${labelWidth}px; padding-right: ${labelGap}px; flex-shrink: 0;"></div>
+                        <div style="width: ${maxContentPixelWidth}px; flex: 0 0 ${maxContentPixelWidth}px; text-align: left; overflow-wrap: anywhere; word-break: break-word;">${line}</div>
                     </div>
                 `;
             }
@@ -260,11 +270,11 @@ function renderContactInfo(company, personalContacts, scale = 1) {
         contactItems.push(createAlignedItem(item.label, item.content, isLast));
     });
 
-    const baseX = 500 * scale;
+    const baseX = CONTACT_START_X * scale;
     const baseY = 180 * scale;
 
     return `
-        <div style="position: absolute; left: ${baseX}px; top: ${baseY}px; color: #144E8C; font-size: ${28 * scale}px; z-index: 2;">
+        <div style="position: absolute; left: ${baseX}px; top: ${baseY}px; width: ${(CONTACT_LABEL_WIDTH + CONTACT_LABEL_GAP + CONTACT_CONTENT_MAX_WIDTH) * scale}px; color: #144E8C; font-size: ${28 * scale}px; z-index: 2;">
             ${contactItems.join('')}
         </div>
     `;
@@ -272,19 +282,33 @@ function renderContactInfo(company, personalContacts, scale = 1) {
 
 // HTML文本换行函数
 function wrapTextForHTML(text, maxCharsPerLine) {
-    const words = text.split(' ');
+    const words = text.split(/\s+/);
     const lines = [];
-    let currentLine = words[0] || '';
+    let currentLine = '';
 
-    for (let i = 1; i < words.length; i++) {
-        const word = words[i];
-        if ((currentLine + ' ' + word).length <= maxCharsPerLine) {
-            currentLine += ' ' + word;
+    words.forEach(word => {
+        if (!word) {
+            return;
+        }
+
+        if (word.length > maxCharsPerLine) {
+            if (currentLine) {
+                lines.push(currentLine);
+                currentLine = '';
+            }
+            for (let j = 0; j < word.length; j += maxCharsPerLine) {
+                lines.push(word.slice(j, j + maxCharsPerLine));
+            }
+        } else if ((currentLine + ' ' + word).length <= maxCharsPerLine) {
+            currentLine = currentLine ? currentLine + ' ' + word : word;
         } else {
-            lines.push(currentLine);
+            if (currentLine) {
+                lines.push(currentLine);
+            }
             currentLine = word;
         }
-    }
+    });
+
     if (currentLine) {
         lines.push(currentLine);
     }
@@ -372,8 +396,8 @@ function updatePreview() {
     const backgroundImage = getBackgroundImage(false);
 
     // 实际尺寸预览 (100%) - 使用back.png
-    const originalWidth = 1600;
-    const originalHeight = 580;
+    const originalWidth = SIGNATURE_WIDTH;
+    const originalHeight = SIGNATURE_HEIGHT;
     const actualScale = 1.0;
 
     previewArea.innerHTML = `
@@ -404,23 +428,64 @@ function wrapText(ctx, text, maxWidth) {
         return [text];
     }
 
-    const words = text.split(' ');
+    const words = text.split(/\s+/);
     const lines = [];
-    let currentLine = words[0] || '';
+    let currentLine = '';
 
-    for (let i = 1; i < words.length; i++) {
-        const word = words[i];
-        const testLine = currentLine + ' ' + word;
+    function splitLongWord(word) {
+        const chunks = [];
+        let chunk = '';
+
+        for (const char of word) {
+            const testChunk = chunk + char;
+            if (ctx.measureText(testChunk).width <= maxWidth) {
+                chunk = testChunk;
+            } else {
+                if (chunk) {
+                    chunks.push(chunk);
+                }
+                chunk = char;
+            }
+        }
+
+        if (chunk) {
+            chunks.push(chunk);
+        }
+
+        return chunks;
+    }
+
+    words.forEach(word => {
+        if (!word) {
+            return;
+        }
+
+        if (ctx.measureText(word).width > maxWidth) {
+            if (currentLine) {
+                lines.push(currentLine);
+                currentLine = '';
+            }
+            lines.push(...splitLongWord(word));
+            return;
+        }
+
+        const testLine = currentLine ? currentLine + ' ' + word : word;
         const testWidth = ctx.measureText(testLine).width;
 
         if (testWidth <= maxWidth) {
             currentLine = testLine;
         } else {
-            lines.push(currentLine);
+            if (currentLine) {
+                lines.push(currentLine);
+            }
             currentLine = word;
         }
+    });
+
+    if (currentLine) {
+        lines.push(currentLine);
     }
-    lines.push(currentLine);
+
     return lines;
 }
 
@@ -448,11 +513,11 @@ function drawAlignedContactItem(ctx, label, content, x, y, labelWidth, maxConten
             ctx.textAlign = 'left';
             ctx.fillText(label + ':', x, currentY);
             ctx.textAlign = 'left';
-            ctx.fillText(line, x + labelWidth + 25, currentY); // 增加间距从15到25
+            ctx.fillText(line, x + labelWidth + CONTACT_LABEL_GAP, currentY); // 增加间距从15到25
         } else {
             // 续行：只绘制内容，与第一行内容对齐
             ctx.textAlign = 'left';
-            ctx.fillText(line, x + labelWidth + 25, currentY); // 增加间距从15到25
+            ctx.fillText(line, x + labelWidth + CONTACT_LABEL_GAP, currentY); // 增加间距从15到25
         }
         currentY += lineHeight;
     });
@@ -550,8 +615,8 @@ async function convertToImage() {
         const ctx = canvas.getContext('2d');
 
         // 使用背景图的原始尺寸
-        canvas.width = 1600;
-        canvas.height = 580;
+        canvas.width = SIGNATURE_WIDTH;
+        canvas.height = SIGNATURE_HEIGHT;
 
         // 加载背景图片
         const bgImg = new Image();
@@ -600,9 +665,9 @@ async function convertToImage() {
                 ctx.font = '28px Arial';
                 const startY = 200;
                 const baseLineHeight = 40; // 基础行高
-                const labelWidth = 140; // 标签列宽度（与HTML预览保持一致）
-                const maxContentWidth = 950; // 内容列最大宽度（大幅增加以匹配HTML预览的饱满效果）
-                const startX = 500; // 起始X位置
+                const labelWidth = CONTACT_LABEL_WIDTH; // 标签列宽度（与HTML预览保持一致）
+                const maxContentWidth = CONTACT_CONTENT_MAX_WIDTH; // 内容列最大宽度，保留右侧安全边距
+                const startX = CONTACT_START_X; // 起始X位置
 
                 // 使用动态行距渲染联系信息
                 const finalYPos = renderContactInfoWithDynamicSpacing(
