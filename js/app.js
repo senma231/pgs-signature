@@ -25,14 +25,13 @@ const previewViewport = document.getElementById('previewViewport');
 const exportImage = document.getElementById('exportImage');
 const copyImage = document.getElementById('copyImage');
 
-const SIGNATURE_WIDTH = 1600;
+const SIGNATURE_WIDTH = 1800;
 const SIGNATURE_HEIGHT = 580;
 const CONTACT_START_X = 500;
 const CONTACT_LABEL_WIDTH = 140;
 const CONTACT_LABEL_GAP = 25;
 const CONTACT_RIGHT_PADDING = 50;
 const CONTACT_CONTENT_MAX_WIDTH = SIGNATURE_WIDTH - CONTACT_START_X - CONTACT_LABEL_WIDTH - CONTACT_LABEL_GAP - CONTACT_RIGHT_PADDING;
-const CONTACT_CONTENT_MAX_CHARS = 64;
 const OFFICE_TEXT = 'Office in China, India, Malaysia, Singapore, South Korea, Thailand, Vietnam, Japan, Indonesia, Philippines';
 const OFFICE_START_X = 430;
 const OFFICE_Y = 565;
@@ -193,7 +192,6 @@ function renderContactInfo(company, personalContacts, scale = 1) {
     const labelWidth = CONTACT_LABEL_WIDTH * scale; // 标签列宽度（增加到140以容纳E-mail等较长标签）
     const labelGap = CONTACT_LABEL_GAP * scale;
     const maxContentPixelWidth = CONTACT_CONTENT_MAX_WIDTH * scale;
-    const maxContentWidth = Math.floor(CONTACT_CONTENT_MAX_CHARS / scale);
 
     // 收集所有要显示的联系信息项目
     const allContactItems = [];
@@ -240,7 +238,7 @@ function renderContactInfo(company, personalContacts, scale = 1) {
 
     // 创建两列对齐的项目函数（使用动态行距）
     function createAlignedItem(label, content, isLast = false) {
-        const contentLines = wrapTextForHTML(content, maxContentWidth);
+        const contentLines = wrapTextForHTML(content, maxContentPixelWidth, `${28 * scale}px Arial`);
         let itemHTML = '';
 
         // 计算项目间距（最后一项不需要额外间距）- 与Canvas保持一致
@@ -261,7 +259,7 @@ function renderContactInfo(company, personalContacts, scale = 1) {
                         <div style="width: ${labelWidth}px; text-align: left; padding-right: ${labelGap}px; flex-shrink: 0;">
                             <strong>${label}:</strong>
                         </div>
-                        <div style="width: ${maxContentPixelWidth}px; flex: 0 0 ${maxContentPixelWidth}px; text-align: left; overflow-wrap: anywhere; word-break: break-word;">${line}</div>
+                        <div style="width: ${maxContentPixelWidth}px; flex: 0 0 ${maxContentPixelWidth}px; text-align: left; overflow-wrap: anywhere; word-break: break-word;">${escapeHTML(line)}</div>
                     </div>
                 `;
             } else {
@@ -269,7 +267,7 @@ function renderContactInfo(company, personalContacts, scale = 1) {
                 itemHTML += `
                     <div style="display: flex; margin-bottom: ${lineMarginBottom}px; line-height: ${dynamicLineHeight};">
                         <div style="width: ${labelWidth}px; padding-right: ${labelGap}px; flex-shrink: 0;"></div>
-                        <div style="width: ${maxContentPixelWidth}px; flex: 0 0 ${maxContentPixelWidth}px; text-align: left; overflow-wrap: anywhere; word-break: break-word;">${line}</div>
+                        <div style="width: ${maxContentPixelWidth}px; flex: 0 0 ${maxContentPixelWidth}px; text-align: left; overflow-wrap: anywhere; word-break: break-word;">${escapeHTML(line)}</div>
                     </div>
                 `;
             }
@@ -299,39 +297,28 @@ function renderContactInfo(company, personalContacts, scale = 1) {
     `;
 }
 
-// HTML文本换行函数
-function wrapTextForHTML(text, maxCharsPerLine) {
-    const words = text.split(/\s+/);
-    const lines = [];
-    let currentLine = '';
+function escapeHTML(value) {
+    return String(value)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+}
 
-    words.forEach(word => {
-        if (!word) {
-            return;
-        }
-
-        if (word.length > maxCharsPerLine) {
-            if (currentLine) {
-                lines.push(currentLine);
-                currentLine = '';
-            }
-            for (let j = 0; j < word.length; j += maxCharsPerLine) {
-                lines.push(word.slice(j, j + maxCharsPerLine));
-            }
-        } else if ((currentLine + ' ' + word).length <= maxCharsPerLine) {
-            currentLine = currentLine ? currentLine + ' ' + word : word;
-        } else {
-            if (currentLine) {
-                lines.push(currentLine);
-            }
-            currentLine = word;
-        }
-    });
-
-    if (currentLine) {
-        lines.push(currentLine);
+function getTextMeasureContext(font = '28px Arial') {
+    if (!getTextMeasureContext.canvas) {
+        getTextMeasureContext.canvas = document.createElement('canvas');
     }
-    return lines;
+
+    const ctx = getTextMeasureContext.canvas.getContext('2d');
+    ctx.font = font;
+    return ctx;
+}
+
+// HTML预览也使用像素测量，避免和导出/复制的Canvas换行不一致。
+function wrapTextForHTML(text, maxWidth, font = '28px Arial') {
+    return wrapText(getTextMeasureContext(font), text, maxWidth);
 }
 
 // 办公地点信息区域渲染函数 - 使用精确像素定位
@@ -1268,3 +1255,4 @@ document.addEventListener('DOMContentLoaded', function() {
 window.addEventListener('resize', function() {
     updatePreview();
 });
+
