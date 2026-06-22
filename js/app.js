@@ -19,6 +19,7 @@ const imValue1 = document.getElementById('imValue1');
 const imType2 = document.getElementById('imType2');
 const imValue2 = document.getElementById('imValue2');
 const previewArea = document.getElementById('previewArea');
+const previewViewport = document.getElementById('previewViewport');
 
 // 按钮元素
 const exportImage = document.getElementById('exportImage');
@@ -71,6 +72,19 @@ function updateContactNameMode() {
         contactName.classList.remove('bg-gray-100', 'text-gray-500');
         contactNameLabel.classList.add('required-field');
     }
+}
+
+function getPreviewScale() {
+    if (!previewViewport) {
+        return 1;
+    }
+
+    const viewportWidth = Math.max(previewViewport.clientWidth - 16, 0);
+    if (!viewportWidth) {
+        return 1;
+    }
+
+    return Math.min(1, viewportWidth / SIGNATURE_WIDTH);
 }
 
 // 表单验证
@@ -360,6 +374,9 @@ function updatePreview() {
 
     if (!company || (!isPublicMailboxMode() && !name) || !dept || (company.isDefault && (!company.name || !company.address))) {
         // 显示提示信息
+        previewArea.style.width = '100%';
+        previewArea.style.height = '';
+        previewArea.style.minHeight = '200px';
         previewArea.innerHTML = `
             <div class="text-center">
                 <p class="text-lg mb-2">请完善表单信息 / Please complete the form</p>
@@ -372,6 +389,7 @@ function updatePreview() {
 
     // 移除默认样式，准备显示签名
     previewArea.className = "signature-preview";
+    previewArea.style.minHeight = '0';
 
     // 获取个人联系方式（只显示用户填写的）
     const personalContacts = [];
@@ -401,21 +419,20 @@ function updatePreview() {
     // 使用back.png作为背景图片
     const backgroundImage = getBackgroundImage(false);
 
-    // 实际尺寸预览 (100%) - 使用back.png
-    const originalWidth = SIGNATURE_WIDTH;
-    const originalHeight = SIGNATURE_HEIGHT;
+    // 预览按容器等比缩放，内部布局仍保持实际输出尺寸
+    const previewScale = getPreviewScale();
+    const previewWidth = SIGNATURE_WIDTH * previewScale;
+    const previewHeight = SIGNATURE_HEIGHT * previewScale;
     const actualScale = 1.0;
 
+    previewArea.style.width = `${previewWidth}px`;
+    previewArea.style.height = `${previewHeight}px`;
+
     previewArea.innerHTML = `
-        <div style="width: ${originalWidth}px; height: ${originalHeight}px; font-family: Arial, sans-serif; background-image: url('${backgroundImage}'); background-size: ${originalWidth}px ${originalHeight}px; background-position: 0 0; background-repeat: no-repeat; position: relative; overflow: hidden; border: 1px solid #ddd;">
+        <div style="width: ${SIGNATURE_WIDTH}px; height: ${SIGNATURE_HEIGHT}px; font-family: Arial, sans-serif; background-image: url('${backgroundImage}'); background-size: ${SIGNATURE_WIDTH}px ${SIGNATURE_HEIGHT}px; background-position: 0 0; background-repeat: no-repeat; position: relative; overflow: hidden; border: 1px solid #ddd; transform: scale(${previewScale}); transform-origin: top left;">
             ${renderPersonalInfo(name, dept, company, actualScale)}
             ${renderContactInfo(company, personalContacts, actualScale)}
             ${renderOfficeInfo(actualScale)}
-            <!-- 实际尺寸标识 -->
-            <div style="position: absolute; bottom: 5px; left: 5px; background: rgba(0,0,0,0.7); color: white; padding: 4px 8px; border-radius: 4px; font-size: 12px; line-height: 1.2; z-index: 10;">
-                <div style="margin-bottom: 2px;">实际输出尺寸</div>
-                <div>Actual Output Size</div>
-            </div>
         </div>
     `;
 }
@@ -1246,4 +1263,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // 验证访问密码后初始化应用
     initializeAccessGate();
+});
+
+window.addEventListener('resize', function() {
+    updatePreview();
 });
